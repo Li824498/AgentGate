@@ -1,8 +1,0 @@
-spring:
-  application:
-    name: AgentGate
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.88.130:3306/AgentGate?useSSL=false&serverTimezone=UTC
-    username: root
-    password: 123
