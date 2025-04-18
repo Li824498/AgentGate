@@ -1,4 +1,4 @@
-package com.mylearn.agentgate.entity;
+package com.mylearn.agentgate.core.entity;
 
 import lombok.Data;
 

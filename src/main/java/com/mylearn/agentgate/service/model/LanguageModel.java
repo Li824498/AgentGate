@@ -1,8 +1,8 @@
 package com.mylearn.agentgate.service.model;
 
-import com.mylearn.agentgate.entity.ChatHistory;
-import com.mylearn.agentgate.entity.LRequest;
-import com.mylearn.agentgate.entity.LResponse;
+import com.mylearn.agentgate.core.entity.ChatHistory;
+import com.mylearn.agentgate.core.entity.LRequest;
+import com.mylearn.agentgate.core.entity.LResponse;
 import org.springframework.web.client.RestTemplate;
 
 public interface LanguageModel {

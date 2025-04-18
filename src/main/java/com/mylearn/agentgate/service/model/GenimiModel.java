@@ -1,9 +1,9 @@
 package com.mylearn.agentgate.service.model;
 
 import com.mylearn.agentgate.annoation.ModelType;
-import com.mylearn.agentgate.entity.ChatHistory;
-import com.mylearn.agentgate.entity.LRequest;
-import com.mylearn.agentgate.entity.LResponse;
+import com.mylearn.agentgate.core.entity.ChatHistory;
+import com.mylearn.agentgate.core.entity.LRequest;
+import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.utils.ModelJsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;

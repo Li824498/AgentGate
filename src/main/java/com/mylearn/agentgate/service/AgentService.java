@@ -1,7 +1,7 @@
 package com.mylearn.agentgate.service;
 
-import com.mylearn.agentgate.entity.LRequest;
-import com.mylearn.agentgate.entity.LResponse;
+import com.mylearn.agentgate.core.entity.LRequest;
+import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.service.model.LanguageModel;
 import com.mylearn.agentgate.service.model.ModelSelector;
 import org.springframework.beans.factory.annotation.Autowired;
