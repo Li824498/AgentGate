@@ -2,19 +2,35 @@ package com.mylearn.agentgate.core.processor;
 
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 public abstract class AbstractChatProcessor {
 
-    public final LResponse chatProcess(LRequest lRequest) {
+    /**
+     * 同步非流式传输模式
+     * @param lRequest
+     * @return
+     */
+    public final LResponse syncNonStreamChatProcess(LRequest lRequest, RestTemplate restTemplate) {
         // todo 什么设计模式？？？？
-        LResponse lResponse = new LResponse();
-        history(lRequest, lResponse);
-        prompt(lRequest, lResponse);
-        worldBook(lRequest, lResponse);
+
+        history(lRequest);
+        prompt(lRequest);
+        worldBook(lRequest);
+
+        // todo 以后要一步架构怎么搞？
+        LResponse lResponse = transferAi(lRequest, restTemplate);
+
+        // todo build建造者优化
+
         return lResponse;
     }
 
-    abstract void history(LRequest lRequest, LResponse lResponse);
-    abstract void prompt(LRequest lRequest, LResponse lResponse);
-    abstract void worldBook(LRequest lRequest, LResponse lResponse);
+    abstract void history(LRequest lRequest);
+    abstract void prompt(LRequest lRequest);
+    abstract void worldBook(LRequest lRequest);
+    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate);
 }

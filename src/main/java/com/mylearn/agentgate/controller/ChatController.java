@@ -16,13 +16,7 @@ public class ChatController {
 
     @PostMapping
     public LResponse chatController(@RequestBody LRequest lRequest) {
-        lRequest.setLMName("genimi");
-//        lRequest.setText("hello world!tell me, whats your name");
-        lRequest.setUid_chat(1);
-        lRequest.setUid_position(1);
-
         log.info(lRequest.toString());
-
 
         LResponse lResponse = agentService.chatService(lRequest);
         return lResponse;
