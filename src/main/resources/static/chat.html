@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>简易 AI 聊天</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+        .msg { margin: 10px 0; }
+        .user { color: #3366ff; }
+        .ai { color: #33aa33; }
+        textarea { width: 100%; font-size: 16px; padding: 8px; }
+        button { margin-top: 10px; padding: 8px 16px; font-size: 16px; }
+    </style>
+</head>
+<body>
+<h2>AI 聊天</h2>
+
+<div id="chat-box"></div>
+
+<textarea id="user-input" rows="3" placeholder="输入内容..."></textarea><br/>
+<button onclick="send()">发送</button>
+
+<script>
+    async function send() {
+        const input = document.getElementById("user-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const box = document.getElementById("chat-box");
+        box.innerHTML += `<div class="msg user"><strong>你：</strong>${text}</div>`;
+        input.value = "";
+
+        const payload = {
+            text: text,
+            uid_chat: 0,
+            uid_position: 0,
+            lMName: "gemini", // 你现在接的就是 gemini
+            api: "test"        // 随便填，现在不处理
+        };
+
+        try {
+            const response = await fetch("http://localhost:8080/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            const reply = data.text || "[无返回]";
+            box.innerHTML += `<div class="msg ai"><strong>AI：</strong>${reply}</div>`;
+            box.scrollTop = box.scrollHeight;
+
+        } catch (e) {
+            box.innerHTML += `<div class="msg ai"><strong>出错：</strong>${e.message}</div>`;
+        }
+    }
+</script>
+</body>
+</html>

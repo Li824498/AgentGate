@@ -10,8 +10,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +19,7 @@ import java.util.Map;
 @ModelType("genimi")
 public class GenimiModel implements LanguageModel{
     @Override
-    public void sendLRequest(LRequest lRequest, ChatHistory chatHistory, RestTemplate restTemplate) {
+    public LResponse sendLRequest(LRequest lRequest, ChatHistory chatHistory, RestTemplate restTemplate) {
         log.info("发送了genimi消息");
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBdRTvIyopn0zc1z_uenRPVzO8cMapm_pI";
 
@@ -45,6 +43,11 @@ public class GenimiModel implements LanguageModel{
         System.out.println("模型回复内容为: " + text);
         System.out.println(response.getBody().toString());
 
+        LResponse lResponse = new LResponse();
+        lResponse.setText(text);
+        lResponse.setUid_chat(lRequest.getUid_chat());
+        lResponse.setUid_position(lResponse.getUid_position());
+        return lResponse;
     }
 
     @Override

@@ -6,6 +6,6 @@ import com.mylearn.agentgate.entity.LResponse;
 import org.springframework.web.client.RestTemplate;
 
 public interface LanguageModel {
-    void sendLRequest(LRequest lRequest, ChatHistory chatHistory, RestTemplate restTemplate);
+    LResponse sendLRequest(LRequest lRequest, ChatHistory chatHistory, RestTemplate restTemplate);
     LResponse getLResponse(int uid_chat, int uid_position);
 }

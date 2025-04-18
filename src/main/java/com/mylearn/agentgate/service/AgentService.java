@@ -20,9 +20,9 @@ public class AgentService {
         LanguageModel model = modelSelector.selectModel(lRequest.getLMName());
 
         // todo history处理
-        model.sendLRequest(lRequest, null, restTemplate);
+        return model.sendLRequest(lRequest, null, restTemplate);
 
-        return model.getLResponse(lRequest.getUid_chat(), lRequest.getUid_position());
+//        return model.getLResponse(lRequest.getUid_chat(), lRequest.getUid_position());
     }
 
 }
