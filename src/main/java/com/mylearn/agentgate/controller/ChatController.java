@@ -17,7 +17,7 @@ public class ChatController {
     @GetMapping
     public LResponse chatController(LRequest lRequest) {
         lRequest.setLMName("genimi");
-        lRequest.setText("hello world!");
+        lRequest.setText("hello world!tell me, whats your name");
         lRequest.setUid_chat(1);
         lRequest.setUid_position(1);
 
