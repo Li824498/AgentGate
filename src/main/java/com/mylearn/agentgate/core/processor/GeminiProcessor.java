@@ -1,21 +1,28 @@
 package com.mylearn.agentgate.core.processor;
 
 import com.mylearn.agentgate.annoation.ModelType;
+import com.mylearn.agentgate.core.domain.history.GeminiHistory;
+import com.mylearn.agentgate.core.entity.HistoryMessage;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @ModelType("gemini")
 public class GeminiProcessor extends AbstractChatProcessor{
-    @Override
-    void history(LRequest lRequest) {
 
+    @Autowired
+    private GeminiHistory history;
+
+    @Override
+    List<HistoryMessage> history(LRequest lRequest) {
+        List<HistoryMessage> historyMessages = history.process(lRequest);
+        return historyMessages;
     }
 
     @Override
@@ -29,22 +36,44 @@ public class GeminiProcessor extends AbstractChatProcessor{
     }
 
     @Override
-    LResponse transferAi(LRequest lRequest, RestTemplate restTemplate) {
+    LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history) {
         // todo 负载均衡设计 可能采用配置方式解决
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBdRTvIyopn0zc1z_uenRPVzO8cMapm_pI";
 
 
-        HttpEntity<Map<String, Object>> entity = sendGeminiText(lRequest);
+//        HttpEntity<Map<String, Object>> entity = sendGeminiText(lRequest);
+        HttpEntity<Map<String, Object>> entity = sendGeminiTextWithHistory(lRequest, history);
         ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
         String text = getGeminiText(response);
 
         // todo 建造者模式优化
         LResponse lResponse = new LResponse();
         lResponse.setText(text);
-        lResponse.setUid_chat(lRequest.getUid_chat());
-        lResponse.setUid_position(lRequest.getUid_position());
+        lResponse.setChatId(lRequest.getChatId());
+        lResponse.setMsgIndex(lRequest.getMsgIndex());
 
         return lResponse;
+    }
+
+    private HttpEntity<Map<String, Object>> sendGeminiTextWithHistory(LRequest lRequest, List<HistoryMessage> history) {
+        List<Map> contents = new ArrayList<>();
+        for (HistoryMessage historyMessage : history) {
+            List<Map<String, String>> parts = List.of(Map.of("text", historyMessage.getText()));
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("role", historyMessage.getRole());
+            map.put("parts", parts);
+
+            contents.add(map);
+        }
+        Map<String, Object> body = Map.of("contents", contents);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, httpHeaders);
+
+        return entity;
     }
 
 
