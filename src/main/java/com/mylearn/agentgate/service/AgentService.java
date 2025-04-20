@@ -17,7 +17,7 @@ public class AgentService {
     private RestTemplate restTemplate;
 
     public LResponse chatService(LRequest lRequest) {
-        AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getLMName());
+        AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
 
         LResponse lResponse = processor.syncNonStreamChatProcess(lRequest, restTemplate);
 

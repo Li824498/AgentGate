@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class LRequest {
-    public String conText;
+    public String context;
     public String userId;
     public String chatId;
     public int msgIndex;
-    public String lMName;
+    public String modelName;
     public String api;
 
 }

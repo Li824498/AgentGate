@@ -12,6 +12,6 @@ public class HistoryMessage {
     public String chatId;
     public int msgIndex;
     public String role;
-    public String conText;
+    public String context;
     public LocalDateTime createTime;
 }

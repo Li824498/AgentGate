@@ -26,7 +26,7 @@ public class GeminiHistory implements History{
         historyMessage.setChatId(lRequest.getChatId());
         historyMessage.setMsgIndex(lRequest.getMsgIndex());
         historyMessage.setRole("user");
-        historyMessage.setConText(lRequest.getConText());
+        historyMessage.setContext(lRequest.getContext());
 
         historyMapper.insertHistory(historyMessage);
 
@@ -40,7 +40,7 @@ public class GeminiHistory implements History{
         historyMessage.setChatId(lResponse.getChatId());
         historyMessage.setMsgIndex(lResponse.getMsgIndex());
         historyMessage.setRole("model");
-        historyMessage.setConText(lResponse.getConText());
+        historyMessage.setContext(lResponse.getContext());
 
         historyMapper.insertHistory(historyMessage);
     }

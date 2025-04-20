@@ -38,7 +38,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
     @Override
     void historyAfter(LResponse lResponse) {
-        historyAfter(lResponse);
+        history.processAfter(lResponse);
     }
 
     @Override
@@ -54,17 +54,19 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
         // todo 建造者模式优化
         LResponse lResponse = new LResponse();
-        lResponse.setConText(text);
+        lResponse.setContext(text);
+        lResponse.setUserId(lRequest.getUserId());
         lResponse.setChatId(lRequest.getChatId());
-        lResponse.setMsgIndex(lRequest.getMsgIndex());
+        lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
 
         return lResponse;
     }
 
     private HttpEntity<Map<String, Object>> sendGeminiTextWithHistory(LRequest lRequest, List<HistoryMessage> history) {
         List<Map> contents = new ArrayList<>();
+        // todo Map有上限，修掉这个bug
         for (HistoryMessage historyMessage : history) {
-            List<Map<String, String>> parts = List.of(Map.of("text", historyMessage.getConText()));
+            List<Map<String, String>> parts = List.of(Map.of("text", historyMessage.getContext()));
 
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("role", historyMessage.getRole());
@@ -72,6 +74,16 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
             contents.add(map);
         }
+
+        List<Map<String, String>> partsNow = new ArrayList<>();
+        partsNow.add(Map.of("text", lRequest.getContext()));
+
+        Map<String, Object> mapNow = new LinkedHashMap<>();
+        mapNow.put("role", "user");
+        mapNow.put("parts", partsNow);
+
+        contents.add(mapNow);
+
         Map<String, Object> body = Map.of("contents", contents);
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -97,7 +109,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
     // todo 重新设计兼容三大模块
     public static HttpEntity<Map<String, Object>> sendGeminiText(LRequest lRequest) {
-        Map<String, Object> part = Map.of("text", lRequest.getConText());
+        Map<String, Object> part = Map.of("text", lRequest.getContext());
 
         Map<String, Object> message = Map.of("parts", List.of(part));
 
