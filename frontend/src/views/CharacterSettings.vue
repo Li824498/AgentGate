@@ -48,13 +48,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useSettingsStore } from '@/stores/settings'
+
+const settingsStore = useSettingsStore()
 
 // 角色卡选择
 const characterSelection = ref({
-  current: 'none'
+  current: settingsStore.characterSettings.character || 'none'
 })
 
 // 已导入的角色卡列表
@@ -64,6 +67,38 @@ const importedCharacters = ref([
   { id: '1', name: '助手' },
   { id: '2', name: '程序员' }
 ])
+
+// 角色卡配置
+const characterConfig = ref({
+  character: settingsStore.characterSettings.character || '',
+  personality: settingsStore.characterSettings.personality || '',
+  background: settingsStore.characterSettings.background || ''
+})
+
+// 监听变化并更新store
+watch(characterConfig, (newValue) => {
+  settingsStore.characterSettings = {
+    character: newValue.character,
+    personality: newValue.personality,
+    background: newValue.background
+  }
+}, { deep: true })
+
+// 监听选择变化
+watch(characterSelection, (newValue) => {
+  settingsStore.characterSettings = {
+    ...settingsStore.characterSettings,
+    character: newValue.current
+  }
+}, { deep: true })
+
+// 初始化时从store加载
+onMounted(() => {
+  characterSelection.value.current = settingsStore.characterSettings.character || 'none'
+  characterConfig.value.character = settingsStore.characterSettings.character
+  characterConfig.value.personality = settingsStore.characterSettings.personality
+  characterConfig.value.background = settingsStore.characterSettings.background
+})
 
 // 上传相关方法
 const beforeUpload = (file) => {

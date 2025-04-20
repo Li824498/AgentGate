@@ -63,8 +63,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useSettingsStore } from '@/stores/settings'
+
+const settingsStore = useSettingsStore()
 
 // 模拟数据
 const mockSessions = [
@@ -86,7 +89,7 @@ const mockSessions = [
 
 // 会话选择
 const sessionSelection = ref({
-  current: 'new'
+  current: settingsStore.sessionSettings.sessionId || 'new'
 })
 
 // 会话配置
@@ -97,6 +100,34 @@ const sessionConfig = ref({
 
 // 会话列表
 const sessions = ref(mockSessions)
+
+const sessionForm = ref({
+  sessionId: settingsStore.sessionSettings.sessionId || '',
+  contextLength: settingsStore.sessionSettings.contextLength || 10
+})
+
+// 监听变化并更新store
+watch(sessionForm, (newValue) => {
+  settingsStore.sessionSettings = {
+    sessionId: newValue.sessionId,
+    contextLength: newValue.contextLength
+  }
+}, { deep: true })
+
+// 监听选择变化
+watch(sessionSelection, (newValue) => {
+  settingsStore.sessionSettings = {
+    ...settingsStore.sessionSettings,
+    sessionId: newValue.current
+  }
+}, { deep: true })
+
+// 初始化时从store加载
+onMounted(() => {
+  sessionSelection.value.current = settingsStore.sessionSettings.sessionId || 'new'
+  sessionForm.value.sessionId = settingsStore.sessionSettings.sessionId
+  sessionForm.value.contextLength = settingsStore.sessionSettings.contextLength
+})
 
 // 创建会话
 const createSession = async () => {
@@ -125,6 +156,10 @@ const createSession = async () => {
 // 切换会话
 const switchSession = (session) => {
   sessionSelection.value.current = session.id
+  settingsStore.sessionSettings = {
+    ...settingsStore.sessionSettings,
+    sessionId: session.id
+  }
   ElMessage.success(`已切换到会话：${session.name}`)
 }
 

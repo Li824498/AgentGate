@@ -48,22 +48,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useSettingsStore } from '@/stores/settings'
 
-// 预设选择
+const settingsStore = useSettingsStore()
+
 const presetSelection = ref({
-  current: 'none'
+  current: settingsStore.presetSettings.preset || 'none'
 })
 
-// 已导入的预设列表
 const importedPresets = ref([
   // 这里应该是从后端获取的预设列表
   // 示例数据
   { id: '1', name: '通用对话预设' },
   { id: '2', name: '代码生成预设' }
 ])
+
+const presetConfig = ref({
+  preset: settingsStore.presetSettings.preset || '',
+  customPrompt: settingsStore.presetSettings.customPrompt || ''
+})
+
+// 监听选择变化
+watch(presetSelection, (newValue) => {
+  settingsStore.presetSettings = {
+    ...settingsStore.presetSettings,
+    preset: newValue.current
+  }
+}, { deep: true })
+
+// 初始化时从store加载
+onMounted(() => {
+  presetSelection.value.current = settingsStore.presetSettings.preset || 'none'
+})
+
+// 监听变化并更新store
+watch(presetConfig, (newValue) => {
+  settingsStore.presetSettings = {
+    preset: newValue.preset,
+    customPrompt: newValue.customPrompt
+  }
+}, { deep: true })
 
 // 上传相关方法
 const beforeUpload = (file) => {

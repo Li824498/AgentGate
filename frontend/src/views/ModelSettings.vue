@@ -37,17 +37,38 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useSettingsStore } from '@/stores/settings'
+import { ElMessage } from 'element-plus'
+
+const settingsStore = useSettingsStore()
 
 // 模型选择
 const modelSelection = ref({
-  type: ''
+  type: settingsStore.modelSettings.modelName || ''
 })
 
 // 模型配置
 const modelConfig = ref({
-  type: '',
-  api: ''
+  type: settingsStore.modelSettings.modelName || '',
+  api: settingsStore.modelSettings.api || ''
+})
+
+// 监听变化并更新store
+watch([modelSelection, modelConfig], () => {
+  settingsStore.modelSettings = {
+    modelName: modelSelection.value.type,
+    api: modelConfig.value.api,
+    temperature: 0.7,
+    maxTokens: 2000
+  }
+}, { deep: true })
+
+// 初始化时从store加载
+onMounted(() => {
+  modelSelection.value.type = settingsStore.modelSettings.modelName
+  modelConfig.value.type = settingsStore.modelSettings.modelName
+  modelConfig.value.api = settingsStore.modelSettings.api
 })
 
 const importModel = async () => {

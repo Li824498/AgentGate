@@ -107,6 +107,7 @@ import PresetSettings from './PresetSettings.vue'
 import CharacterSettings from './CharacterSettings.vue'
 import SessionSettings from './SessionSettings.vue'
 import RenderSettings from './RenderSettings.vue'
+import { useSettingsStore } from '@/stores/settings'
 
 const router = useRouter()
 const route = useRoute()
@@ -119,6 +120,8 @@ const currentComponent = shallowRef(null)
 const messages = ref([])
 const inputMessage = ref('')
 const chatBox = ref(null)
+
+const settingsStore = useSettingsStore()
 
 const components = {
   '1': ModelSettings,
@@ -143,6 +146,14 @@ const handleSelect = (key) => {
 }
 
 const handleClose = () => {
+  // 保存设置到全局状态
+  if (currentComponent.value) {
+    const settingsKey = Object.keys(components).find(key => components[key] === currentComponent.value)
+    if (settingsKey) {
+      const storeKey = `${settingsKey}Settings`
+      settingsStore[storeKey] = currentComponent.value.settings || {}
+    }
+  }
   dialogVisible.value = false
 }
 
@@ -151,11 +162,14 @@ const sendMessage = async () => {
 
   const message = {
     context: inputMessage.value,
-    userId: "1",
+    userId: localStorage.getItem('userId'),
     chatId: "1",
     msgIndex: messages.value.length + 1,
-    modelName: "gemini",
-    api: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBdRTvIyopn0zc1z_uenRPVzO8cMapm_pI"
+    ...settingsStore.modelSettings,
+    ...settingsStore.presetSettings,
+    ...settingsStore.characterSettings,
+    ...settingsStore.sessionSettings,
+    ...settingsStore.renderSettings
   }
 
   messages.value.push(message)

@@ -48,13 +48,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useSettingsStore } from '@/stores/settings'
+
+const settingsStore = useSettingsStore()
 
 // 渲染模式选择
 const renderSelection = ref({
-  current: 'none'
+  current: settingsStore.renderSettings.theme || 'none'
 })
 
 // 已导入的渲染模式列表
@@ -100,6 +103,28 @@ const fetchRenders = async () => {
 
 // 初始化时获取渲染模式列表
 fetchRenders()
+
+const renderForm = ref({
+  theme: settingsStore.renderSettings.theme || 'default',
+  fontSize: settingsStore.renderSettings.fontSize || 14,
+  spacing: settingsStore.renderSettings.spacing || 1.5
+})
+
+// 监听选择变化
+watch(renderSelection, (newValue) => {
+  settingsStore.renderSettings = {
+    ...settingsStore.renderSettings,
+    theme: newValue.current
+  }
+}, { deep: true })
+
+// 初始化时从store加载
+onMounted(() => {
+  renderSelection.value.current = settingsStore.renderSettings.theme || 'none'
+  renderForm.value.theme = settingsStore.renderSettings.theme
+  renderForm.value.fontSize = settingsStore.renderSettings.fontSize
+  renderForm.value.spacing = settingsStore.renderSettings.spacing
+})
 </script>
 
 <style scoped>
