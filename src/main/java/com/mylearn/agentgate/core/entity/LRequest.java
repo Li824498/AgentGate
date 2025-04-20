@@ -7,6 +7,7 @@ public class LRequest {
     public String context;
     public String userId;
     public String chatId;
+    public int promptId;
     public int msgIndex;
     public String modelName;
     public String api;
