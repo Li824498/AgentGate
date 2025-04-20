@@ -6,7 +6,7 @@ import com.mylearn.agentgate.core.entity.LResponse;
 
 import java.util.List;
 
-public interface History {
+public interface HistoryManager {
     List<HistoryMessage> processBefore(LRequest lRequest);
 
     void processAfter(LResponse lResponse);

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class GeminiHistory implements History{
+public class GeminiHistoryManager implements HistoryManager {
     @Autowired
     private HistoryMapper historyMapper;
 
