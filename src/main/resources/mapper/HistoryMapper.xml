@@ -3,9 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.mylearn.agentgate.mapper.HistoryMapper">
-
-    <!-- 这里面之后加insert、select、update、delete标签 -->
-
     <select id="selectByUserIdAndChatId" resultType="com.mylearn.agentgate.core.entity.HistoryMessage">
         select id, user_id, chat_id, msg_index, role, context, create_time
         from tb_history

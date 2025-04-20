@@ -3,6 +3,7 @@ package com.mylearn.agentgate.core.processor;
 import com.mylearn.agentgate.core.entity.HistoryMessage;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import com.mylearn.agentgate.core.entity.Prompt;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -18,11 +19,11 @@ public abstract class AbstractChatProcessor {
         // todo 什么设计模式？？？？
 
         List<HistoryMessage> history = historyBefore(lRequest);
-        prompt(lRequest);
+        Prompt prompt = prompt(lRequest);
         worldBook(lRequest);
 
         // todo 以后要一步架构怎么搞？
-        LResponse lResponse = transferAi(lRequest, restTemplate, history);
+        LResponse lResponse = transferAi(lRequest, restTemplate, history, prompt);
 
         historyAfter(lResponse);
 
@@ -31,7 +32,7 @@ public abstract class AbstractChatProcessor {
 
     abstract List<HistoryMessage> historyBefore(LRequest lRequest);
     abstract void historyAfter(LResponse lResponse);
-    abstract void prompt(LRequest lRequest);
+    abstract Prompt prompt(LRequest lRequest);
     abstract void worldBook(LRequest lRequest);
-    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history);
+    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt);
 }
