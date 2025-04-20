@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class LRequest {
-    public String text;
+    public String conText;
     public String userId;
     public String chatId;
     public int msgIndex;

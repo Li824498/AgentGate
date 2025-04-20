@@ -20,10 +20,11 @@ public class GeminiProcessor extends AbstractChatProcessor{
     private GeminiHistory history;
 
     @Override
-    List<HistoryMessage> history(LRequest lRequest) {
-        List<HistoryMessage> historyMessages = history.process(lRequest);
+    List<HistoryMessage> historyBefore(LRequest lRequest) {
+        List<HistoryMessage> historyMessages = history.processBefore(lRequest);
         return historyMessages;
     }
+
 
     @Override
     void prompt(LRequest lRequest) {
@@ -33,6 +34,11 @@ public class GeminiProcessor extends AbstractChatProcessor{
     @Override
     void worldBook(LRequest lRequest) {
 
+    }
+
+    @Override
+    void historyAfter(LResponse lResponse) {
+        historyAfter(lResponse);
     }
 
     @Override
@@ -48,7 +54,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
         // todo 建造者模式优化
         LResponse lResponse = new LResponse();
-        lResponse.setText(text);
+        lResponse.setConText(text);
         lResponse.setChatId(lRequest.getChatId());
         lResponse.setMsgIndex(lRequest.getMsgIndex());
 
@@ -58,7 +64,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
     private HttpEntity<Map<String, Object>> sendGeminiTextWithHistory(LRequest lRequest, List<HistoryMessage> history) {
         List<Map> contents = new ArrayList<>();
         for (HistoryMessage historyMessage : history) {
-            List<Map<String, String>> parts = List.of(Map.of("text", historyMessage.getText()));
+            List<Map<String, String>> parts = List.of(Map.of("text", historyMessage.getConText()));
 
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("role", historyMessage.getRole());
@@ -91,7 +97,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
     // todo 重新设计兼容三大模块
     public static HttpEntity<Map<String, Object>> sendGeminiText(LRequest lRequest) {
-        Map<String, Object> part = Map.of("text", lRequest.getText());
+        Map<String, Object> part = Map.of("text", lRequest.getConText());
 
         Map<String, Object> message = Map.of("parts", List.of(part));
 

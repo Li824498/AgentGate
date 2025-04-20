@@ -2,6 +2,7 @@ package com.mylearn.agentgate.core.domain.history;
 
 import com.mylearn.agentgate.core.entity.HistoryMessage;
 import com.mylearn.agentgate.core.entity.LRequest;
+import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.mapper.HistoryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ public class GeminiHistory implements History{
     private HistoryMapper historyMapper;
 
     @Override
-    public List<HistoryMessage> process(LRequest lRequest) {
+    public List<HistoryMessage> processBefore(LRequest lRequest) {
         String userId = lRequest.getUserId();
         String chatId = lRequest.getChatId();
 
@@ -24,11 +25,23 @@ public class GeminiHistory implements History{
         historyMessage.setUserId(lRequest.getUserId());
         historyMessage.setChatId(lRequest.getChatId());
         historyMessage.setMsgIndex(lRequest.getMsgIndex());
-        historyMessage.setRole("role");
-        historyMessage.setText(lRequest.getText());
+        historyMessage.setRole("user");
+        historyMessage.setConText(lRequest.getConText());
 
         historyMapper.insertHistory(historyMessage);
 
         return historyMessages;
+    }
+
+    @Override
+    public void processAfter(LResponse lResponse) {
+        HistoryMessage historyMessage = new HistoryMessage();
+        historyMessage.setUserId(lResponse.getUserId());
+        historyMessage.setChatId(lResponse.getChatId());
+        historyMessage.setMsgIndex(lResponse.getMsgIndex());
+        historyMessage.setRole("model");
+        historyMessage.setConText(lResponse.getConText());
+
+        historyMapper.insertHistory(historyMessage);
     }
 }

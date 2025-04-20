@@ -17,19 +17,20 @@ public abstract class AbstractChatProcessor {
     public final LResponse syncNonStreamChatProcess(LRequest lRequest, RestTemplate restTemplate) {
         // todo 什么设计模式？？？？
 
-        List<HistoryMessage> history = history(lRequest);
+        List<HistoryMessage> history = historyBefore(lRequest);
         prompt(lRequest);
         worldBook(lRequest);
 
         // todo 以后要一步架构怎么搞？
         LResponse lResponse = transferAi(lRequest, restTemplate, history);
 
-        // todo build建造者优化
+        historyAfter(lResponse);
 
         return lResponse;
     }
 
-    abstract List<HistoryMessage> history(LRequest lRequest);
+    abstract List<HistoryMessage> historyBefore(LRequest lRequest);
+    abstract void historyAfter(LResponse lResponse);
     abstract void prompt(LRequest lRequest);
     abstract void worldBook(LRequest lRequest);
     abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history);
