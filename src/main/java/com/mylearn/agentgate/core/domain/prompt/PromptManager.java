@@ -2,10 +2,8 @@ package com.mylearn.agentgate.core.domain.prompt;
 
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import com.mylearn.agentgate.core.entity.Prompt;
 
-public class GenimiPrompt implements Prompt{
-    @Override
-    public void process(LRequest lRequest, LResponse lResponse) {
-
-    }
+public interface PromptManager {
+    Prompt process(LRequest lRequest);
 }
