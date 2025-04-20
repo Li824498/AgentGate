@@ -28,7 +28,7 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
     @Override
     void prompt(LRequest lRequest) {
-
+        
     }
 
     @Override
