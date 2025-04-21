@@ -3,8 +3,16 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.mylearn.agentgate.mapper.PromptMapper">
+    <insert id="save">
+        insert into tb_prompt (name, user_id, prompt)
+        values (#{name}, #{userId}, #{prompt})
+    </insert>
 
     <select id="selectById" resultType="com.mylearn.agentgate.core.entity.Prompt" parameterType="int">
         select id, name, user_id, prompt, create_time, update_time from tb_prompt where id = #{id}
+    </select>
+
+    <select id="selectAllPrompts" resultType="com.mylearn.agentgate.core.entity.Prompt">
+        select id, name, user_id, prompt, create_time, update_time from tb_prompt
     </select>
 </mapper>
