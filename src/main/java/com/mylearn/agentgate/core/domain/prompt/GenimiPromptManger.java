@@ -5,7 +5,9 @@ import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.core.entity.Prompt;
 import com.mylearn.agentgate.mapper.PromptMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GenimiPromptManger implements PromptManager {
     @Autowired
     private PromptMapper promptMapper;
