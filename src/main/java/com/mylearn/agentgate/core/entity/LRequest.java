@@ -8,6 +8,7 @@ public class LRequest {
     public String userId;
     public String chatId;
     public int promptId;
+    public int roleCardId;
     public int msgIndex;
     public String modelName;
     public String api;
