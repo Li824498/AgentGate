@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.xml.transform.Result;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,5 +27,9 @@ public class ResultDTO<T> {
 
     public static <T> ResultDTO<T> of(int code, String message, T data) {
         return new ResultDTO<T>(code, message, data);
+    }
+
+    public static ResultDTO successWithEmpty() {
+        return new ResultDTO<>(SUCCESS, "success", null);
     }
 }
