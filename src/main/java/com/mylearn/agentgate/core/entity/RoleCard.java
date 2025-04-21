@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 public class RoleCard {
     public int id;
     public String name;
-    public int userId;
+    public String userId;
+    public String description;
+    public String avatarUrl;
     public String startText;
     public String settingText;
     public LocalDateTime createTime;

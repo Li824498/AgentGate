@@ -3,13 +3,22 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
     <mapper namespace="com.mylearn.agentgate.mapper.RoleCardMapper">
+    <insert id="insertRoleCard">
+        insert into tb_role_card
+        (name, user_id, description, avatar_url, start_text, setting_text)
+        values (#{name}, #{userId}, #{description}, #{avatarUrl}, #{startText}, #{settingText})
+    </insert>
 
 
-    <select id="selectById" resultType="com.mylearn.agentgate.core.entity.RoleCard" parameterType="int">
-        select id, name, user_id, prompt, create_time, update_time
+    <select id="selectAllRoleCards" resultType="com.mylearn.agentgate.core.entity.RoleCard">
+        select id, name, user_id, description, avatar_url, start_text, setting_text, create_time, update_time
         from tb_role_card
-        where id = #{id}
     </select>
 
 
+    <select id="selectById" resultType="com.mylearn.agentgate.core.entity.RoleCard">
+        select id, name, user_id, description, avatar_url, start_text, setting_text, create_time, update_time
+        from tb_role_card
+        where user_id = #{UserId}
+    </select>
 </mapper>
