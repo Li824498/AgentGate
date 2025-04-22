@@ -15,7 +15,7 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleLogin">登录</el-button>
+          <el-button type="primary" @click="handleLogin" :loading="loading">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -26,26 +26,40 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { http } from '@/utils/http'
 
 const router = useRouter()
+const loading = ref(false)
+
 const loginForm = ref({
   userId: '',
   password: ''
 })
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!loginForm.value.userId || !loginForm.value.password) {
     ElMessage.warning('请输入用户ID和密码')
     return
   }
   
-  // 这里可以添加实际的登录验证逻辑
-  // 暂时简单处理，直接存储到localStorage
-  localStorage.setItem('userId', loginForm.value.userId)
-  localStorage.setItem('password', loginForm.value.password)
-  
-  ElMessage.success('登录成功')
-  router.push('/')
+  loading.value = true
+  try {
+    const result = await http.post('/api/user/login', loginForm.value)
+    
+    if (result.code === 0) {
+      // 登录成功，保存token
+      localStorage.setItem('token', result.data)
+      localStorage.setItem('userId', loginForm.value.userId)
+      ElMessage.success('登录成功')
+      router.push('/')
+    } else {
+      ElMessage.error(result.message || '登录失败')
+    }
+  } catch (error) {
+    ElMessage.error('登录请求失败：' + error.message)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

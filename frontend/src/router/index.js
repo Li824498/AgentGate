@@ -28,9 +28,9 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('userId') && localStorage.getItem('password')
+  const token = localStorage.getItem('token')
   
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (to.meta.requiresAuth && !token) {
     next('/login')
   } else {
     next()
