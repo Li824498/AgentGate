@@ -5,9 +5,12 @@ import com.mylearn.agentgate.core.domain.history.GeminiHistoryManager;
 import com.mylearn.agentgate.core.domain.prompt.PromptManager;
 import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.entity.*;
+import com.mylearn.agentgate.exception.AgentException;
+import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -24,6 +27,8 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
     @Autowired
     private RoleCardManager roleCardManager;
+
+
 
     @Override
     List<HistoryMessage> historyBefore(LRequest lRequest) {
@@ -54,6 +59,16 @@ public class GeminiProcessor extends AbstractChatProcessor{
     }
 
     @Override
+    void chatMetaBefore(LRequest lRequest) {
+        history.chatMetaProcess(lRequest);
+    }
+
+    @Override
+    void chatMetaAfter(LResponse lResponse) {
+
+    }
+
+    @Override
     LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard) {
         // todo 负载均衡设计 可能采用配置方式解决
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBdRTvIyopn0zc1z_uenRPVzO8cMapm_pI";
@@ -75,7 +90,19 @@ public class GeminiProcessor extends AbstractChatProcessor{
 
         entity = sendGemini(lRequest, history, prompt, roleCard);
 
-        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+        ResponseEntity<Map> response = null;
+        try {
+            response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+            if (response.getStatusCode().isError()) {
+                throw new AgentException("模型调用失败，状态码：" + response.getStatusCode());
+            }
+        } catch (RestClientException e) {
+            throw new AgentException("调用AI服务异常", e);
+        }
+
+//        if (response.getStatusCode().isError()) throw new RuntimeException("模型调用失败");
+
+
         String text = getGeminiText(response);
 
         // todo 建造者模式优化

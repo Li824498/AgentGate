@@ -1,8 +1,10 @@
 package com.mylearn.agentgate.core.domain.history;
 
+import com.mylearn.agentgate.core.entity.ChatMeta;
 import com.mylearn.agentgate.core.entity.HistoryMessage;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import com.mylearn.agentgate.mapper.HistoryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,8 @@ public class GeminiHistoryManager implements HistoryManager {
     @Autowired
     private HistoryMapper historyMapper;
 
+    @Autowired
+    private ChatMetaMapper chatMetaMapper;
     @Override
     public List<HistoryMessage> processBefore(LRequest lRequest) {
         String userId = lRequest.getUserId();
@@ -43,5 +47,16 @@ public class GeminiHistoryManager implements HistoryManager {
         historyMessage.setContext(lResponse.getContext());
 
         historyMapper.insertHistory(historyMessage);
+    }
+
+    @Override
+    public void chatMetaProcess(LRequest lRequest) {
+        ChatMeta chatMeta = new ChatMeta();
+
+        chatMeta.setChatId(lRequest.getChatId());
+        chatMeta.setUserId(lRequest.getUserId());
+        chatMeta.setLastHistory(lRequest.getContext());
+
+        chatMetaMapper.upsert(chatMeta);
     }
 }

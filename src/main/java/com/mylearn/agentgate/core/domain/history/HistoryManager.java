@@ -10,4 +10,6 @@ public interface HistoryManager {
     List<HistoryMessage> processBefore(LRequest lRequest);
 
     void processAfter(LResponse lResponse);
+
+    void chatMetaProcess(LRequest lRequest);
 }
