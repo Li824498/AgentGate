@@ -16,8 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Component
-@ModelType("gemini")
-public class GeminiProcessor extends AbstractChatProcessor{
+@ModelType(value = "gemini")
+public class GeminiProcessor extends AbstractChatProcessor implements justfortest{
 
     @Autowired
     private GeminiHistoryManager history;

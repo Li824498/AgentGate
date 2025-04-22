@@ -28,7 +28,9 @@ public class GeminiHistoryManager implements HistoryManager {
         HistoryMessage historyMessage = new HistoryMessage();
         historyMessage.setUserId(lRequest.getUserId());
         historyMessage.setChatId(lRequest.getChatId());
-        historyMessage.setMsgIndex(lRequest.getMsgIndex());
+//        historyMessage.setMsgIndex(lRequest.getMsgIndex());
+        // todo 楼层数太多咋办？修补，先不信任前端
+        historyMessage.setMsgIndex(historyMessages.size() + 1);
         historyMessage.setRole("user");
         historyMessage.setContext(lRequest.getContext());
 
