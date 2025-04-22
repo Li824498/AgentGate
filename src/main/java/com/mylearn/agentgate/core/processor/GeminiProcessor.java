@@ -17,7 +17,7 @@ import java.util.*;
 
 @Component
 @ModelType(value = "gemini")
-public class GeminiProcessor extends AbstractChatProcessor implements justfortest{
+public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private GeminiHistoryManager history;

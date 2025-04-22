@@ -8,7 +8,7 @@ class PasswordUtilTest {
 
     @Test
     public void testHashAndMatch() {
-        String plainPassword = "original_password";
+        String plainPassword = "123456";
 
         String hashPassword = PasswordUtil.hashPassword(plainPassword);
         System.out.println(hashPassword);
