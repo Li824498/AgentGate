@@ -10,7 +10,7 @@
             <el-option
               v-for="session in sessions"
               :key="session.id"
-              :label="session.name"
+              :label="formatSessionLabel(session)"
               :value="session.id"
             />
           </el-select>
@@ -21,18 +21,7 @@
     <!-- 会话配置 -->
     <div class="section">
       <h3>会话配置</h3>
-      <el-form :model="sessionConfig" label-width="100px">
-        <el-form-item label="会话名称">
-          <el-input v-model="sessionConfig.name" placeholder="请输入会话名称" />
-        </el-form-item>
-        <el-form-item label="会话描述">
-          <el-input
-            v-model="sessionConfig.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入会话描述"
-          />
-        </el-form-item>
+      <el-form>
         <el-form-item>
           <el-button type="primary" @click="createSession">创建会话</el-button>
         </el-form-item>
@@ -42,22 +31,29 @@
     <!-- 会话列表 -->
     <div class="section">
       <h3>会话列表</h3>
-      <el-table :data="sessions" style="width: 100%">
-        <el-table-column prop="name" label="会话名称" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column prop="createdAt" label="创建时间" />
-        <el-table-column prop="messageCount" label="消息数量" />
-        <el-table-column label="操作">
-          <template #default="scope">
-            <el-button type="primary" link @click="switchSession(scope.row)">
-              切换
-            </el-button>
-            <el-button type="danger" link @click="deleteSession(scope.row)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="session-cards">
+        <div 
+          v-for="session in sessions" 
+          :key="session.id" 
+          class="session-card"
+          @click="selectSession(session)"
+        >
+          <div class="session-header">
+            <span class="role-name">{{ session.roleCardName || '无角色' }}</span>
+            <span class="chat-id">#{{ session.chatId }}</span>
+            <span class="create-time">{{ formatDate(session.createTime) }}</span>
+            <span class="message-count">{{ session.msgNum || 0 }} 条消息</span>
+          </div>
+          <div class="session-content">
+            <div class="last-history" v-if="session.lastHistory">
+              {{ formatLastHistory(session.lastHistory) }}
+            </div>
+            <div class="last-history empty" v-else>
+              暂无消息
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -66,91 +62,60 @@
 import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useSettingsStore } from '@/stores/settings'
+import { http } from '@/utils/http'
 
+const emit = defineEmits(['close'])
 const settingsStore = useSettingsStore()
-
-// 模拟数据
-const mockSessions = [
-  {
-    id: '1',
-    name: '默认会话',
-    description: '系统默认会话',
-    createdAt: '2024-03-20 10:00:00',
-    messageCount: 10
-  },
-  {
-    id: '2',
-    name: '测试会话',
-    description: '用于测试的会话',
-    createdAt: '2024-03-21 14:30:00',
-    messageCount: 5
-  }
-]
 
 // 会话选择
 const sessionSelection = ref({
-  current: settingsStore.sessionSettings.sessionId || 'new'
-})
-
-// 会话配置
-const sessionConfig = ref({
-  name: '',
-  description: ''
+  current: settingsStore.sessionSettings.currentSession || 'new'
 })
 
 // 会话列表
-const sessions = ref(mockSessions)
+const sessions = ref([])
 
 const sessionForm = ref({
   sessionId: settingsStore.sessionSettings.sessionId || '',
   contextLength: settingsStore.sessionSettings.contextLength || 10
 })
 
-// 监听变化并更新store
-watch(sessionForm, (newValue) => {
-  settingsStore.sessionSettings = {
-    sessionId: newValue.sessionId,
-    contextLength: newValue.contextLength
-  }
-}, { deep: true })
-
-// 监听选择变化
-watch(sessionSelection, (newValue) => {
-  settingsStore.sessionSettings = {
-    ...settingsStore.sessionSettings,
-    sessionId: newValue.current
-  }
-}, { deep: true })
-
 // 初始化时从store加载
 onMounted(() => {
-  sessionSelection.value.current = settingsStore.sessionSettings.sessionId || 'new'
+  sessionSelection.value.current = settingsStore.sessionSettings.currentSession || 'new'
   sessionForm.value.sessionId = settingsStore.sessionSettings.sessionId
   sessionForm.value.contextLength = settingsStore.sessionSettings.contextLength
+  fetchSessions()
 })
 
 // 创建会话
-const createSession = async () => {
-  if (!sessionConfig.value.name) {
-    ElMessage.warning('请输入会话名称')
-    return
+const createSession = () => {
+  // 获取最后一个会话的chatId
+  const lastSession = sessions.value.length > 0 ? sessions.value[sessions.value.length - 1] : null
+  const newChatId = lastSession ? (parseInt(lastSession.chatId) + 1).toString() : '1'
+  
+  // 保存新的chatId到store
+  settingsStore.sessionSettings = {
+    ...settingsStore.sessionSettings,
+    currentChatId: newChatId
   }
+  
+  // 关闭浮窗
+  emit('close')
+}
 
-  // 模拟创建会话
-  const newSession = {
-    id: String(Date.now()),
-    name: sessionConfig.value.name,
-    description: sessionConfig.value.description,
-    createdAt: new Date().toLocaleString(),
-    messageCount: 0
+// 选择会话
+const selectSession = (session) => {
+  // 更新全局状态
+  settingsStore.sessionSettings = {
+    ...settingsStore.sessionSettings,
+    currentChatId: session.chatId,
+    roleCardId: session.roleCardId,
+    msgIndex: (session.msgNum || 0) + 1
   }
-
-  sessions.value.push(newSession)
-  sessionConfig.value = {
-    name: '',
-    description: ''
-  }
-  ElMessage.success('会话创建成功')
+  
+  // 关闭浮窗
+  emit('close')
 }
 
 // 切换会话
@@ -172,18 +137,42 @@ const deleteSession = (session) => {
   }
 }
 
-// TODO: 等后端接口完成后，替换为实际的API调用
-// const fetchSessions = async () => {
-//   try {
-//     const response = await fetch('/api/sessions')
-//     if (response.ok) {
-//       const data = await response.json()
-//       sessions.value = data
-//     }
-//   } catch (error) {
-//     console.error('获取会话列表失败:', error)
-//   }
-// }
+// 格式化会话标签
+const formatSessionLabel = (session) => {
+  const date = new Date(session.updateTime)
+  return `${session.chatId} (${date.toLocaleString()})`
+}
+
+// 获取会话列表
+const fetchSessions = async () => {
+  try {
+    const result = await http.get('/api/chatMeta')
+    if (result.code === 0) {
+      sessions.value = result.data
+    } else {
+      ElMessage.error('获取会话列表失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('获取会话列表失败：' + error.message)
+  }
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
+// 格式化最后一条消息
+const formatLastHistory = (history) => {
+  if (!history) return ''
+  // 限制显示长度，超过部分用省略号
+  const maxLength = 100
+  return history.length > maxLength 
+    ? history.substring(0, maxLength) + '...'
+    : history
+}
 </script>
 
 <style scoped>
@@ -211,5 +200,65 @@ const deleteSession = (session) => {
 
 .el-select {
   width: 100%;
+}
+
+.session-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.session-card {
+  background-color: white;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.session-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.2);
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.role-name {
+  font-weight: bold;
+  color: #409eff;
+}
+
+.chat-id {
+  color: #909399;
+}
+
+.create-time {
+  color: #909399;
+}
+
+.message-count {
+  color: #67c23a;
+}
+
+.session-content {
+  min-height: 60px;
+}
+
+.last-history {
+  color: #606266;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.last-history.empty {
+  color: #909399;
+  font-style: italic;
 }
 </style> 

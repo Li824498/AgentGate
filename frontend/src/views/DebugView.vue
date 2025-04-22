@@ -36,8 +36,14 @@
           <!-- 默认显示聊天窗口 -->
           <div class="chat-container">
             <div class="chat-box" ref="chatBox">
-              <div v-for="(message, index) in messages" :key="index" class="message">
-                <pre>{{ JSON.stringify(message, null, 2) }}</pre>
+              <div v-for="(message, index) in messages" :key="index" class="message" :class="message.role">
+                <div class="message-header">
+                  <span class="role">{{ message.role === 'user' ? '用户' : 'AI' }}</span>
+                  <span class="time">{{ formatTime(message.createTime) }}</span>
+                </div>
+                <div class="message-content">
+                  <pre>{{ message.context }}</pre>
+                </div>
               </div>
             </div>
             <div class="input-area">
@@ -46,7 +52,7 @@
                 type="textarea"
                 :rows="3"
                 placeholder="输入消息..."
-                @keyup.enter.native="sendMessage"
+                @keyup.enter.ctrl="sendMessage"
               />
               <el-button type="primary" @click="sendMessage">发送</el-button>
             </div>
@@ -59,7 +65,7 @@
             width="70%"
             :before-close="handleClose"
           >
-            <component :is="currentComponent" />
+            <component :is="currentComponent" @close="handleClose" />
           </el-dialog>
         </el-main>
         
@@ -91,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, computed, shallowRef } from 'vue'
+import { ref, computed, shallowRef, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Setting,
@@ -108,6 +114,8 @@ import CharacterSettings from './CharacterSettings.vue'
 import SessionSettings from './SessionSettings.vue'
 import RenderSettings from './RenderSettings.vue'
 import { useSettingsStore } from '@/stores/settings'
+import { ElMessage } from 'element-plus'
+import { http } from '@/utils/http'
 
 const router = useRouter()
 const route = useRoute()
@@ -208,6 +216,39 @@ const handleLogout = () => {
   localStorage.removeItem('password')
   router.push('/login')
 }
+
+// 格式化时间
+const formatTime = (timeString) => {
+  if (!timeString) return ''
+  const date = new Date(timeString)
+  return date.toLocaleString()
+}
+
+// 获取历史消息
+const fetchHistories = async (chatId) => {
+  try {
+    const result = await http.get(`/api/chat/${chatId}`)
+    if (result.code === 0) {
+      messages.value = result.data
+      // 滚动到底部
+      await nextTick()
+      if (chatBox.value) {
+        chatBox.value.scrollTop = chatBox.value.scrollHeight
+      }
+    } else {
+      ElMessage.error('获取历史消息失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('获取历史消息失败：' + error.message)
+  }
+}
+
+// 监听会话变化
+watch(() => settingsStore.sessionSettings.currentChatId, (newChatId) => {
+  if (newChatId) {
+    fetchHistories(newChatId)
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
@@ -289,16 +330,48 @@ const handleLogout = () => {
 }
 
 .message {
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f5f7fa;
 }
 
-.message pre {
+.message.user {
+  background-color: #e6f7ff;
+  margin-left: 20%;
+}
+
+.message.assistant {
+  background-color: #f0f9eb;
+  margin-right: 20%;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.message-header .role {
+  font-weight: bold;
+  color: #409eff;
+}
+
+.message-header .time {
+  color: #909399;
+}
+
+.message-content {
+  color: #303133;
+  line-height: 1.5;
+}
+
+.message-content pre {
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
+  font-family: inherit;
 }
 
 .input-area {
