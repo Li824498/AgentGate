@@ -1,11 +1,9 @@
 package com.mylearn.agentgate.core.domain.history;
 
-import com.mylearn.agentgate.core.entity.ChatMeta;
-import com.mylearn.agentgate.core.entity.HistoryMessage;
-import com.mylearn.agentgate.core.entity.LRequest;
-import com.mylearn.agentgate.core.entity.LResponse;
+import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import com.mylearn.agentgate.mapper.HistoryMapper;
+import com.mylearn.agentgate.mapper.RoleCardMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +16,11 @@ public class GeminiHistoryManager implements HistoryManager {
 
     @Autowired
     private ChatMetaMapper chatMetaMapper;
+
+    @Autowired
+    private RoleCardMapper roleCardMapper;
+
+
     @Override
     public List<HistoryMessage> processBefore(LRequest lRequest) {
         String userId = lRequest.getUserId();
@@ -52,12 +55,36 @@ public class GeminiHistoryManager implements HistoryManager {
     }
 
     @Override
-    public void chatMetaProcess(LRequest lRequest) {
+    public void chatMetaProcessBefore(LRequest lRequest) {
         ChatMeta chatMeta = new ChatMeta();
 
         chatMeta.setChatId(lRequest.getChatId());
         chatMeta.setUserId(lRequest.getUserId());
         chatMeta.setLastHistory(lRequest.getContext());
+        chatMeta.setRoleCardId(lRequest.getRoleCardId());
+
+        RoleCard roleCard = roleCardMapper.selectById(lRequest.getRoleCardId());
+
+        chatMeta.setRoleCardName(roleCard.getName());
+        chatMeta.setMsgNum(lRequest.getMsgIndex());
+
+        chatMetaMapper.upsert(chatMeta);
+    }
+
+    @Override
+    public void chatMetaProcessAfter(LRequest lRequest, LResponse lResponse) {
+        ChatMeta chatMeta = new ChatMeta();
+
+        chatMeta.setChatId(lResponse.getChatId());
+        chatMeta.setUserId(lResponse.getUserId());
+        chatMeta.setLastHistory(lResponse.getContext());
+        chatMeta.setRoleCardId(lRequest.getRoleCardId());
+
+        // todo 异步处理？？？
+        RoleCard roleCard = roleCardMapper.selectById(lRequest.getRoleCardId());
+
+        chatMeta.setRoleCardName(roleCard.getName());
+        chatMeta.setMsgNum(lRequest.getMsgIndex());
 
         chatMetaMapper.upsert(chatMeta);
     }

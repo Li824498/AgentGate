@@ -33,6 +33,10 @@ public class ChatController {
     @GetMapping("/{id}")
     public ResultDTO getHistoriesByChatId(@PathVariable("id") String chatId) {
         List<HistoryMessage> result = historyService.getHistoriesByChatId(chatId);
+        System.out.println("yes");
+        for (HistoryMessage historyMessage : result) {
+            System.out.println(historyMessage.getContext());
+        }
         return ResultDTO.success(result);
     }
 

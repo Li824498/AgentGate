@@ -11,5 +11,7 @@ public interface HistoryManager {
 
     void processAfter(LResponse lResponse);
 
-    void chatMetaProcess(LRequest lRequest);
+    void chatMetaProcessBefore(LRequest lRequest);
+
+    void chatMetaProcessAfter(LRequest lRequest, LResponse lResponse);
 }

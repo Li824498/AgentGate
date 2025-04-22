@@ -14,4 +14,5 @@ public class HistoryMessage {
     public String role;
     public String context;
     public LocalDateTime createTime;
+    public LocalDateTime updateTime;
 }

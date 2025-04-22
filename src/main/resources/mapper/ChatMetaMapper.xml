@@ -4,14 +4,14 @@
 
 <mapper namespace="com.mylearn.agentgate.mapper.ChatMetaMapper">
     <insert id="insert" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">
-        insert into tb_chat_meta (chat_id, user_id, lastHistory)
-        values (#{chatId}, #{userId}, #{lastHistory})
+        insert into tb_chat_meta (chat_id, user_id, lastHistory, role_card_id, role_card_name, msg_num)
+        values (#{chatId}, #{userId}, #{lastHistory}, #{roleCardId}, #{roleCardName}, #{msgNum})
     </insert>
 
     <insert id="upsert" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">
-        insert into tb_chat_meta (chat_id, user_id, lastHistory)
-        values (#{chatId}, #{userId}, #{lastHistory})
-        on duplicate key update last_history = values(lastHistory)
+        insert into tb_chat_meta (chat_id, user_id, lastHistory, role_card_id, role_card_name, msg_num)
+        values (#{chatId}, #{userId}, #{lastHistory}, #{roleCardId}, #{roleCardName}, #{msgNum})
+        on duplicate key update last_history = values(lastHistory), msg_num = #{msgNum}
     </insert>
 
     <update id="update" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">
@@ -22,12 +22,12 @@
 
 
     <select id="selectAllChatMetas" resultType="com.mylearn.agentgate.core.entity.ChatMeta">
-        select id, chat_id, user_id, last_history, create_time, update_time
+        select id, chat_id, user_id, last_history, role_card_id, role_card_name, msg_num, create_time, update_time
         from tb_chat_meta
     </select>
     <select id="selectByChatId" resultType="com.mylearn.agentgate.core.entity.ChatMeta"
             parameterType="java.lang.String">
-        select id, chat_id, user_id, last_history, create_time, update_time
+        select id, chat_id, user_id, last_history, role_card_id, role_card_name, msg_num, create_time, update_time
         from tb_chat_meta
         where chat_id = #{chatId}
     </select>

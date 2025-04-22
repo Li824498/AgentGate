@@ -32,7 +32,7 @@ public abstract class AbstractChatProcessor {
         LResponse lResponse = transferAi(lRequest, restTemplate, history, prompt, roleCard);
 
         historyAfter(lResponse);
-        chatMetaAfter(lResponse);
+        chatMetaAfter(lRequest, lResponse);
 
         return lResponse;
     }
@@ -40,7 +40,7 @@ public abstract class AbstractChatProcessor {
     abstract List<HistoryMessage> historyBefore(LRequest lRequest);
     abstract void historyAfter(LResponse lResponse);
     abstract void chatMetaBefore(LRequest lRequest);
-    abstract void chatMetaAfter(LResponse lResponse);
+    abstract void chatMetaAfter(LRequest lRequest, LResponse lResponse);
     abstract Prompt prompt(LRequest lRequest);
     abstract RoleCard roleCard(LRequest lRequest);
     abstract void worldBook(LRequest lRequest);

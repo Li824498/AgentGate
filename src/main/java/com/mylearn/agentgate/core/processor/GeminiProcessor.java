@@ -6,7 +6,6 @@ import com.mylearn.agentgate.core.domain.prompt.PromptManager;
 import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.exception.AgentException;
-import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -60,12 +59,12 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Override
     void chatMetaBefore(LRequest lRequest) {
-        history.chatMetaProcess(lRequest);
+        history.chatMetaProcessBefore(lRequest);
     }
 
     @Override
-    void chatMetaAfter(LResponse lResponse) {
-
+    void chatMetaAfter(LRequest lRequest, LResponse lResponse) {
+        history.chatMetaProcessAfter(lRequest, lResponse);
     }
 
     @Override

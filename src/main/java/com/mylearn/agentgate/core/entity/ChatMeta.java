@@ -10,6 +10,9 @@ public class ChatMeta {
     String chatId;
     String userId;
     String lastHistory;
+    int roleCardId;
+    String roleCardName;
+    int msgNum;
     LocalDateTime createTime;
     LocalDateTime updateTime;
 }
