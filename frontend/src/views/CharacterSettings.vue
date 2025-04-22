@@ -26,9 +26,7 @@
           <el-upload
             class="upload-demo"
             drag
-            action="/api/characters/upload"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
+            :http-request="handleUpload"
             :before-upload="beforeUpload"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
@@ -52,6 +50,7 @@ import { ref, onMounted, watch } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useSettingsStore } from '@/stores/settings'
+import { http } from '@/utils/http'
 
 const settingsStore = useSettingsStore()
 
@@ -61,12 +60,7 @@ const characterSelection = ref({
 })
 
 // 已导入的角色卡列表
-const importedCharacters = ref([
-  // 这里应该是从后端获取的角色卡列表
-  // 示例数据
-  { id: '1', name: '助手' },
-  { id: '2', name: '程序员' }
-])
+const importedCharacters = ref([])
 
 // 角色卡配置
 const characterConfig = ref({
@@ -110,26 +104,41 @@ const beforeUpload = (file) => {
   return true
 }
 
-const handleUploadSuccess = (response) => {
-  ElMessage.success('角色卡上传成功')
-  // 刷新角色卡列表
-  fetchCharacters()
-}
+const handleUpload = async (options) => {
+  const formData = new FormData()
+  formData.append('file', options.file)
 
-const handleUploadError = () => {
-  ElMessage.error('角色卡上传失败')
+  try {
+    const result = await http.post('/api/roleCard/upload/file', formData)
+    
+    if (result.code === 0) {
+      ElMessage.success('角色卡上传成功')
+      // 刷新角色卡列表
+      fetchCharacters()
+    } else {
+      ElMessage.error('角色卡上传失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('角色卡上传失败：' + error.message)
+  }
 }
 
 // 获取角色卡列表
 const fetchCharacters = async () => {
   try {
-    const response = await fetch('/api/characters')
-    if (response.ok) {
-      const data = await response.json()
-      importedCharacters.value = data
+    const result = await http.get('/api/roleCard')
+    if (result.code === 0) {
+      importedCharacters.value = result.data.map(card => ({
+        id: card.id,
+        name: card.name,
+        description: card.description,
+        avatarUrl: card.avatarUrl
+      }))
+    } else {
+      ElMessage.error('获取角色卡列表失败：' + result.message)
     }
   } catch (error) {
-    console.error('获取角色卡列表失败:', error)
+    ElMessage.error('获取角色卡列表失败：' + error.message)
   }
 }
 
