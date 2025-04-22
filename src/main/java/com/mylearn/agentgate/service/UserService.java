@@ -21,6 +21,7 @@ public class UserService {
 
     public String login(String userId, String password) {
         String plainPassword = password;
+        // todo 不存在用户为空的情况
         String hashPassword = userMapper.selectById(userId);
 
         if (!PasswordUtil.matchPassword(plainPassword, hashPassword)) {

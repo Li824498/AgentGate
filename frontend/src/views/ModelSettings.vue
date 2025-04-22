@@ -6,9 +6,12 @@
       <el-form :model="modelSelection" label-width="100px">
         <el-form-item label="模型类型">
           <el-select v-model="modelSelection.type" placeholder="请选择模型类型">
-            <el-option label="Gemini" value="gemini" />
-            <el-option label="GPT" value="gpt" />
-            <el-option label="Claude" value="claude" />
+            <el-option
+              v-for="model in modelList"
+              :key="model"
+              :label="model"
+              :value="model"
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -20,9 +23,12 @@
       <el-form :model="modelConfig" label-width="100px">
         <el-form-item label="模型类型">
           <el-select v-model="modelConfig.type" placeholder="请选择模型类型">
-            <el-option label="Gemini" value="gemini" />
-            <el-option label="GPT" value="gpt" />
-            <el-option label="Claude" value="claude" />
+            <el-option
+              v-for="model in modelList"
+              :key="model"
+              :label="model"
+              :value="model"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="API地址">
@@ -40,8 +46,12 @@
 import { ref, onMounted, watch } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { ElMessage } from 'element-plus'
+import { http } from '@/utils/http'
 
 const settingsStore = useSettingsStore()
+
+// 模型列表
+const modelList = ref([])
 
 // 模型选择
 const modelSelection = ref({
@@ -50,27 +60,25 @@ const modelSelection = ref({
 
 // 模型配置
 const modelConfig = ref({
-  type: settingsStore.modelSettings.modelName || '',
-  api: settingsStore.modelSettings.api || ''
+  type: '',
+  api: ''
 })
 
-// 监听变化并更新store
-watch([modelSelection, modelConfig], () => {
-  settingsStore.modelSettings = {
-    modelName: modelSelection.value.type,
-    api: modelConfig.value.api,
-    temperature: 0.7,
-    maxTokens: 2000
+// 获取模型列表
+const fetchModels = async () => {
+  try {
+    const result = await http.get('/api/model/query')
+    if (result.code === 0) {
+      modelList.value = result.data
+    } else {
+      ElMessage.error('获取模型列表失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('获取模型列表失败：' + error.message)
   }
-}, { deep: true })
+}
 
-// 初始化时从store加载
-onMounted(() => {
-  modelSelection.value.type = settingsStore.modelSettings.modelName
-  modelConfig.value.type = settingsStore.modelSettings.modelName
-  modelConfig.value.api = settingsStore.modelSettings.api
-})
-
+// 导入模型
 const importModel = async () => {
   if (!modelConfig.value.type || !modelConfig.value.api) {
     ElMessage.warning('请填写完整的模型配置信息')
@@ -78,27 +86,39 @@ const importModel = async () => {
   }
 
   try {
-    const response = await fetch('/api/models', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(modelConfig.value)
+    const result = await http.post('/api/model/save', {
+      model: modelConfig.value.type,
+      api: modelConfig.value.api
     })
     
-    if (response.ok) {
+    if (result.code === 0) {
       ElMessage.success('模型导入成功')
       modelConfig.value = {
         type: '',
         api: ''
       }
+      // 刷新模型列表
+      fetchModels()
     } else {
-      throw new Error('导入失败')
+      ElMessage.error('模型导入失败：' + result.message)
     }
   } catch (error) {
     ElMessage.error('模型导入失败：' + error.message)
   }
 }
+
+// 监听模型选择变化
+watch(modelSelection, (newValue) => {
+  settingsStore.modelSettings = {
+    modelName: newValue.type,
+    api: ''
+  }
+}, { deep: true })
+
+// 初始化时获取模型列表
+onMounted(() => {
+  fetchModels()
+})
 </script>
 
 <style scoped>

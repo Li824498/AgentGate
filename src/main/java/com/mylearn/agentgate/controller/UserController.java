@@ -18,6 +18,8 @@ public class UserController {
      * @param loginDTO
      * @return
      */
+
+    // todo 登录优化，怎么他妈的六秒
     @PostMapping("/login")
     public ResultDTO<String> login(@RequestBody LoginDTO loginDTO) {
         String userId = loginDTO.getUserId();
