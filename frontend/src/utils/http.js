@@ -42,15 +42,28 @@ export const http = {
   },
   
   post: async (url, data, options = {}) => {
+    // 处理FormData
+    let body
+    let headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+
+    if (data instanceof FormData) {
+      body = data
+      // 删除Content-Type，让浏览器自动设置boundary
+      delete headers['Content-Type']
+    } else {
+      body = JSON.stringify(data)
+    }
+
     const config = httpInterceptor.request({
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      body: JSON.stringify(data),
+      headers,
+      body,
       ...options
     })
+
     try {
       const response = await fetch(url, config)
       const result = await response.json()

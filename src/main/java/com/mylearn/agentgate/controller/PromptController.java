@@ -6,6 +6,7 @@ import com.mylearn.agentgate.core.entity.Prompt;
 import com.mylearn.agentgate.dto.PromptDTO;
 import com.mylearn.agentgate.dto.ResultDTO;
 import com.mylearn.agentgate.service.PromptService;
+import com.mylearn.agentgate.utils.UserIdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,7 +40,7 @@ public class PromptController {
         ObjectMapper objectMapper = new ObjectMapper();
         PromptDTO promptDTO = objectMapper.readValue(json, PromptDTO.class);
 
-        promptService.save(promptDTO.getName(), promptDTO.getUserId(), promptDTO.getPrompt());
+        promptService.save(promptDTO.getName(), UserIdUtils.getUserId(), promptDTO.getPrompt());
         return ResultDTO.successWithEmpty();
     }
 }

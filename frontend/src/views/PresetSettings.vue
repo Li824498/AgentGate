@@ -8,7 +8,7 @@
           <el-select v-model="presetSelection.current" placeholder="请选择预设">
             <el-option label="不使用预设" value="none" />
             <el-option
-              v-for="preset in importedPresets"
+              v-for="preset in presetList"
               :key="preset.id"
               :label="preset.name"
               :value="preset.id"
@@ -26,9 +26,7 @@
           <el-upload
             class="upload-demo"
             drag
-            action="/api/presets/upload"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
+            :http-request="handleUpload"
             :before-upload="beforeUpload"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
@@ -52,43 +50,43 @@ import { ref, onMounted, watch } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useSettingsStore } from '@/stores/settings'
+import { http } from '@/utils/http'
 
 const settingsStore = useSettingsStore()
 
+// 预设列表
+const presetList = ref([])
+
+// 预设选择
 const presetSelection = ref({
   current: settingsStore.presetSettings.preset || 'none'
 })
 
-const importedPresets = ref([
-  // 这里应该是从后端获取的预设列表
-  // 示例数据
-  { id: '1', name: '通用对话预设' },
-  { id: '2', name: '代码生成预设' }
-])
-
+// 预设配置
 const presetConfig = ref({
-  preset: settingsStore.presetSettings.preset || '',
-  customPrompt: settingsStore.presetSettings.customPrompt || ''
+  preset: '',
+  customPrompt: ''
 })
 
-// 监听选择变化
+// 获取预设列表
+const fetchPresets = async () => {
+  try {
+    const result = await http.get('/api/prompts')
+    if (result.code === 0) {
+      presetList.value = result.data
+    } else {
+      ElMessage.error('获取预设列表失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('获取预设列表失败：' + error.message)
+  }
+}
+
+// 监听预设选择变化
 watch(presetSelection, (newValue) => {
   settingsStore.presetSettings = {
-    ...settingsStore.presetSettings,
-    preset: newValue.current
-  }
-}, { deep: true })
-
-// 初始化时从store加载
-onMounted(() => {
-  presetSelection.value.current = settingsStore.presetSettings.preset || 'none'
-})
-
-// 监听变化并更新store
-watch(presetConfig, (newValue) => {
-  settingsStore.presetSettings = {
-    preset: newValue.preset,
-    customPrompt: newValue.customPrompt
+    preset: newValue.current,
+    customPrompt: ''
   }
 }, { deep: true })
 
@@ -102,31 +100,29 @@ const beforeUpload = (file) => {
   return true
 }
 
-const handleUploadSuccess = (response) => {
-  ElMessage.success('预设上传成功')
-  // 刷新预设列表
-  fetchPresets()
-}
+const handleUpload = async (options) => {
+  const formData = new FormData()
+  formData.append('file', options.file)
 
-const handleUploadError = () => {
-  ElMessage.error('预设上传失败')
-}
-
-// 获取预设列表
-const fetchPresets = async () => {
   try {
-    const response = await fetch('/api/presets')
-    if (response.ok) {
-      const data = await response.json()
-      importedPresets.value = data
+    const result = await http.post('/api/prompts/upload/file', formData)
+    
+    if (result.code === 0) {
+      ElMessage.success('预设上传成功')
+      // 刷新预设列表
+      fetchPresets()
+    } else {
+      ElMessage.error('预设上传失败：' + result.message)
     }
   } catch (error) {
-    console.error('获取预设列表失败:', error)
+    ElMessage.error('预设上传失败：' + error.message)
   }
 }
 
 // 初始化时获取预设列表
-fetchPresets()
+onMounted(() => {
+  fetchPresets()
+})
 </script>
 
 <style scoped>
