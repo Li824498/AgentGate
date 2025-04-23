@@ -94,10 +94,11 @@ const createSession = () => {
   const lastSession = sessions.value.length > 0 ? sessions.value[sessions.value.length - 1] : null
   const newChatId = lastSession ? (parseInt(lastSession.chatId) + 1).toString() : '1'
   
-  // 保存新的chatId到store
+  // 保存新的chatId到store，并初始化msgIndex为1
   settingsStore.sessionSettings = {
     ...settingsStore.sessionSettings,
-    currentChatId: newChatId
+    currentChatId: newChatId,
+    msgIndex: 1
   }
   
   // 关闭浮窗
@@ -111,7 +112,8 @@ const selectSession = (session) => {
     ...settingsStore.sessionSettings,
     currentChatId: session.chatId,
     roleCardId: session.roleCardId,
-    msgIndex: (session.msgNum || 0) + 1
+    msgIndex: (session.msgNum || 0) + 1,  // 消息数量 + 1
+    currentSession: session.chatId  // 更新当前会话ID
   }
   
   // 关闭浮窗

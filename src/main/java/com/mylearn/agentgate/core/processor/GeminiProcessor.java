@@ -70,7 +70,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     @Override
     LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard) {
         // todo 负载均衡设计 可能采用配置方式解决
-        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBdRTvIyopn0zc1z_uenRPVzO8cMapm_pI";
+        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
         // todo 分情况模式的
 //        HttpEntity<Map<String, Object>> entity = sendGeminiText(lRequest);
@@ -127,7 +127,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapPrompt);
         //2.model:角色卡开头
 //        List<Map<String, String>> partsStartText = List.of(Map.of("test", roleCard == null ? "" : roleCard.getStartText()));
-        List<Map<String, String>> partsStartText = List.of(Map.of("test", Optional.ofNullable(roleCard).map(RoleCard::getStartText).orElse("")));
+        List<Map<String, String>> partsStartText = List.of(Map.of("text", Optional.ofNullable(roleCard).map(RoleCard::getStartText).orElse("")));
         Map<String, Object> mapStartText = new LinkedHashMap<>();
         mapStartText.put("role", "model");
         mapStartText.put("parts", partsStartText);

@@ -4,14 +4,14 @@
 
 <mapper namespace="com.mylearn.agentgate.mapper.ChatMetaMapper">
     <insert id="insert" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">
-        insert into tb_chat_meta (chat_id, user_id, lastHistory, role_card_id, role_card_name, msg_num)
+        insert into tb_chat_meta (chat_id, user_id, last_history, role_card_id, role_card_name, msg_num)
         values (#{chatId}, #{userId}, #{lastHistory}, #{roleCardId}, #{roleCardName}, #{msgNum})
     </insert>
 
     <insert id="upsert" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">
-        insert into tb_chat_meta (chat_id, user_id, lastHistory, role_card_id, role_card_name, msg_num)
+        insert into tb_chat_meta (chat_id, user_id, last_history, role_card_id, role_card_name, msg_num)
         values (#{chatId}, #{userId}, #{lastHistory}, #{roleCardId}, #{roleCardName}, #{msgNum})
-        on duplicate key update last_history = values(lastHistory), msg_num = #{msgNum}
+        on duplicate key update last_history = #{lastHistory}, msg_num = #{msgNum}
     </insert>
 
     <update id="update" parameterType="com.mylearn.agentgate.core.entity.ChatMeta">

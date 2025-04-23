@@ -84,7 +84,7 @@ public class GeminiHistoryManager implements HistoryManager {
         RoleCard roleCard = roleCardMapper.selectById(lRequest.getRoleCardId());
 
         chatMeta.setRoleCardName(roleCard.getName());
-        chatMeta.setMsgNum(lRequest.getMsgIndex());
+        chatMeta.setMsgNum(lResponse.getMsgIndex());
 
         chatMetaMapper.upsert(chatMeta);
     }

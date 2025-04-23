@@ -168,39 +168,52 @@ const handleClose = () => {
 const sendMessage = async () => {
   if (!inputMessage.value.trim()) return
 
-  const message = {
+  const currentMsgIndex = settingsStore.sessionSettings.msgIndex
+  const request = {
     context: inputMessage.value,
     userId: localStorage.getItem('userId'),
-    chatId: "1",
-    msgIndex: messages.value.length + 1,
-    ...settingsStore.modelSettings,
-    ...settingsStore.presetSettings,
-    ...settingsStore.characterSettings,
-    ...settingsStore.sessionSettings,
-    ...settingsStore.renderSettings
+    chatId: settingsStore.sessionSettings.currentChatId,
+    promptId: settingsStore.presetSettings.preset ? parseInt(settingsStore.presetSettings.preset) : 0,
+    roleCardId: settingsStore.characterSettings.character ? parseInt(settingsStore.characterSettings.character) : 0,
+    msgIndex: currentMsgIndex,
+    modelName: settingsStore.modelSettings.modelName,
+    api: settingsStore.modelSettings.api
   }
 
-  messages.value.push(message)
+  // 添加用户消息到界面
+  messages.value.push({
+    role: 'user',
+    context: inputMessage.value,
+    createTime: new Date().toISOString()
+  })
   inputMessage.value = ''
 
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(message)
-    })
-    const data = await response.json()
-    messages.value.push(data)
+    const result = await http.post('/api/chat', request)
+    if (result.code === 0) {
+      // 添加AI响应到界面
+      messages.value.push({
+        role: 'assistant',
+        context: result.data.context,
+        createTime: new Date().toISOString()
+      })
+      // 更新消息索引，步进2
+      settingsStore.sessionSettings = {
+        ...settingsStore.sessionSettings,
+        msgIndex: currentMsgIndex + 2
+      }
+    } else {
+      ElMessage.error('发送消息失败：' + result.message)
+    }
   } catch (error) {
-    messages.value.push({
-      error: error.message
-    })
+    ElMessage.error('发送消息失败：' + error.message)
   }
 
+  // 滚动到底部
   await nextTick()
-  chatBox.value.scrollTop = chatBox.value.scrollHeight
+  if (chatBox.value) {
+    chatBox.value.scrollTop = chatBox.value.scrollHeight
+  }
 }
 
 const switchToChat = () => {

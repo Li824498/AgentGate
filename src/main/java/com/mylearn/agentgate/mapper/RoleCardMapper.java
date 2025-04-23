@@ -7,7 +7,7 @@ import java.util.List;
 
 @Mapper
 public interface RoleCardMapper {
-    RoleCard selectById(int userId);
+    RoleCard selectById(int id);
 
     List<RoleCard> selectAllRoleCards();
 

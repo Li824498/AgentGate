@@ -19,6 +19,6 @@
     <select id="selectById" resultType="com.mylearn.agentgate.core.entity.RoleCard">
         select id, name, user_id, description, avatar_url, start_text, setting_text, create_time, update_time
         from tb_role_card
-        where user_id = #{UserId}
+        where id = #{id}
     </select>
 </mapper>
