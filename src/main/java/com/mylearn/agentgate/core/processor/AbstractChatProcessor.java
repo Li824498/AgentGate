@@ -26,10 +26,10 @@ public abstract class AbstractChatProcessor {
         chatMetaBefore(lRequest);
         Prompt prompt = prompt(lRequest);
         RoleCard roleCard = roleCard(lRequest);
-        worldBook(lRequest);
+        List<String> worldBookMessages = worldBook(lRequest);
 
         // todo 以后要一步架构怎么搞？
-        LResponse lResponse = transferAi(lRequest, restTemplate, history, prompt, roleCard);
+        LResponse lResponse = transferAi(lRequest, restTemplate, history, prompt, roleCard, worldBookMessages);
 
         historyAfter(lResponse);
         chatMetaAfter(lRequest, lResponse);
@@ -43,6 +43,6 @@ public abstract class AbstractChatProcessor {
     abstract void chatMetaAfter(LRequest lRequest, LResponse lResponse);
     abstract Prompt prompt(LRequest lRequest);
     abstract RoleCard roleCard(LRequest lRequest);
-    abstract void worldBook(LRequest lRequest);
-    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard);
+    abstract List<String> worldBook(LRequest lRequest);
+    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages);
 }

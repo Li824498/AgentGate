@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mylearn.agentgate.mapper.WorldBookMapper">
+    <insert id="insert" parameterType="com.mylearn.agentgate.core.entity.WorldBook">
+        insert into tb_worldBook (user_id, url)
+        values (#{userId}, #{url})
+    </insert>
+    <update id="updateStatusByUrl" parameterType="java.lang.String">
+        update tb_worldBook
+        set status = 'DONE'
+        where url = #{url}
+    </update>
+
+
+    <select id="selectByIds" resultType="com.mylearn.agentgate.core.entity.WorldBook">
+        select id, user_id, url, status, create_time, update_time
+        from tb_worldBook
+        <foreach collection="worldBookIds" item="id" open="where id in (" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectAllWorldBooks" resultType="com.mylearn.agentgate.dto.WorldBookDTO">
+        select id, user_id, url, status, create_time, update_time
+        from tb_worldBook
+    </select>
+</mapper>

@@ -4,6 +4,7 @@ import com.mylearn.agentgate.annoation.ModelType;
 import com.mylearn.agentgate.core.domain.history.GeminiHistoryManager;
 import com.mylearn.agentgate.core.domain.prompt.PromptManager;
 import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
+import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.exception.AgentException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private GeminiHistoryManager history;
+
+    @Autowired
+    private WorldBookManager worldBookManager;
 
     @Autowired
     private PromptManager promptManager;
@@ -48,8 +52,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
     }
 
     @Override
-    void worldBook(LRequest lRequest) {
-
+    List<String> worldBook(LRequest lRequest) {
+        return worldBookManager.process(lRequest);
     }
 
     @Override
@@ -68,7 +72,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     }
 
     @Override
-    LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard) {
+    LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
         // todo 负载均衡设计 可能采用配置方式解决
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
@@ -87,7 +91,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
             entity = sendGeminiTextWithHistoryAndPrompt(lRequest, history, prompt);
         }*/
 
-        entity = sendGemini(lRequest, history, prompt, roleCard);
+        entity = sendGemini(lRequest, history, prompt, roleCard, worldBookMessages);
 
         ResponseEntity<Map> response = null;
         try {
@@ -114,7 +118,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         return lResponse;
     }
 
-    private HttpEntity<Map<String, Object>> sendGemini(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard) {
+    private HttpEntity<Map<String, Object>> sendGemini(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
         // 1.user:prompt
         List<Map> contents = new ArrayList<>();
 
@@ -151,7 +155,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         //4.2角色卡设定
         textLastText.append(Optional.ofNullable(roleCard).map(RoleCard::getSettingText).orElse(""));
         //4.3worldBook
-//        textLastText.append(worldBook.getNeedText());
+        textLastText.append(worldBookMessages);
 
         List<Map<String, String>> partsLastText = List.of(Map.of("text", textLastText.toString()));
         Map<String, Object> mapLastText = new LinkedHashMap<>();
