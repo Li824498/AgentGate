@@ -43,6 +43,7 @@ public class WorldBookService {
             Executors.defaultThreadFactory(),
             new ThreadPoolExecutor.AbortPolicy()
     );
+    private static final String DEFAULT_DESCRIPTION = "无描述";
 
     @Autowired
     private WorldBookManager worldBookManager;
@@ -61,6 +62,8 @@ public class WorldBookService {
         worldBook.setUserId(userId);
         String url = DBDAOPath + String.valueOf("user_" + userId + "/") + UUID.randomUUID();
         worldBook.setUrl(url);
+        worldBook.setName(file.getOriginalFilename());
+        worldBook.setDescription(DEFAULT_DESCRIPTION);
         worldBookManager.insert(worldBook);
         log.info(url + "正在解析");
 

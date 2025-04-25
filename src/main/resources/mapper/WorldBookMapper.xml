@@ -4,8 +4,8 @@
 
 <mapper namespace="com.mylearn.agentgate.mapper.WorldBookMapper">
     <insert id="insert" parameterType="com.mylearn.agentgate.core.entity.WorldBook">
-        insert into tb_worldBook (user_id, url)
-        values (#{userId}, #{url})
+        insert into tb_worldBook (name, user_id, description, url)
+        values (#{name}, #{userId}, #{description}, #{url})
     </insert>
     <update id="updateStatusByUrl" parameterType="java.lang.String">
         update tb_worldBook
@@ -15,14 +15,14 @@
 
 
     <select id="selectByIds" resultType="com.mylearn.agentgate.core.entity.WorldBook">
-        select id, user_id, url, status, create_time, update_time
+        select id, name, user_id, description, url, status, create_time, update_time
         from tb_worldBook
         <foreach collection="worldBookIds" item="id" open="where id in (" close=")" separator=",">
             #{id}
         </foreach>
     </select>
     <select id="selectAllWorldBooks" resultType="com.mylearn.agentgate.dto.WorldBookDTO">
-        select id, user_id, url, status, create_time, update_time
+        select id , name, user_id, description, url, status, create_time, update_time
         from tb_worldBook
     </select>
 </mapper>
