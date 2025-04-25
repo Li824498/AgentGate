@@ -19,7 +19,8 @@ export const useSettingsStore = defineStore('settings', {
     },
     sessionSettings: {
       sessionId: '',
-      contextLength: 10
+      contextLength: 10,
+      worldBookIds: []
     },
     renderSettings: {
       theme: 'default',

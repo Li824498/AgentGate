@@ -24,6 +24,10 @@
             <span>会话选择设置</span>
           </el-menu-item>
           <el-menu-item index="5">
+            <el-icon><Collection /></el-icon>
+            <span>世界书设置</span>
+          </el-menu-item>
+          <el-menu-item index="6">
             <el-icon><Picture /></el-icon>
             <span>渲染设置</span>
           </el-menu-item>
@@ -106,13 +110,15 @@ import {
   ChatLineRound,
   Picture,
   View,
-  SwitchButton
+  SwitchButton,
+  Collection
 } from '@element-plus/icons-vue'
 import ModelSettings from './ModelSettings.vue'
 import PresetSettings from './PresetSettings.vue'
 import CharacterSettings from './CharacterSettings.vue'
 import SessionSettings from './SessionSettings.vue'
 import RenderSettings from './RenderSettings.vue'
+import WorldBookSettings from './WorldBookSettings.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { ElMessage } from 'element-plus'
 import { http } from '@/utils/http'
@@ -136,7 +142,8 @@ const components = {
   '2': PresetSettings,
   '3': CharacterSettings,
   '4': SessionSettings,
-  '5': RenderSettings
+  '5': WorldBookSettings,
+  '6': RenderSettings
 }
 
 const titles = {
@@ -144,7 +151,8 @@ const titles = {
   '2': '预设设置',
   '3': '角色卡设置',
   '4': '会话选择设置',
-  '5': '渲染设置'
+  '5': '世界书设置',
+  '6': '渲染设置'
 }
 
 const handleSelect = (key) => {
@@ -176,6 +184,7 @@ const sendMessage = async () => {
     promptId: settingsStore.presetSettings.preset ? parseInt(settingsStore.presetSettings.preset) : 0,
     roleCardId: settingsStore.characterSettings.character ? parseInt(settingsStore.characterSettings.character) : 0,
     msgIndex: currentMsgIndex,
+    worldBookIds: settingsStore.sessionSettings.worldBookIds || [],
     modelName: settingsStore.modelSettings.modelName,
     api: settingsStore.modelSettings.api
   }

@@ -21,7 +21,6 @@ public class WorldBookController {
 
     @PostMapping("/upload/file")
     public ResultDTO uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-//        String json = new String(file.getBytes(), StandardCharsets.UTF_8);
         worldBookService.uploadFile(file);
         return ResultDTO.successWithEmpty();
     }
