@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 核心会话实体
  */
+@Component
 public abstract class AbstractChatProcessor {
 
     private final static ThreadPoolExecutor streamPool = new ThreadPoolExecutor(
@@ -39,8 +41,9 @@ public abstract class AbstractChatProcessor {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
-    @Autowired
-    private OkHttpClient okHttpClient;
+
+
+
 
     /**
      * 同步非流式传输模式
@@ -50,7 +53,7 @@ public abstract class AbstractChatProcessor {
      */
     // todo 事务bug
     @Transactional
-    public LResponse syncNonStreamChatProcess(LRequest lRequest, RestTemplate restTemplate) {
+    public LResponse syncNonStreamChatProcess(LRequest lRequest) {
         // todo 什么设计模式？？？？
 
         List<HistoryMessage> history = historyBefore(lRequest);
@@ -60,7 +63,7 @@ public abstract class AbstractChatProcessor {
         List<String> worldBookMessages = worldBook(lRequest);
 
         // todo 以后要一步架构怎么搞？
-        LResponse lResponse = transferAi(lRequest, restTemplate, history, prompt, roleCard, worldBookMessages);
+        LResponse lResponse = transferAi(lRequest, history, prompt, roleCard, worldBookMessages);
 
         historyAfter(lResponse);
         chatMetaAfter(lRequest, lResponse);
@@ -75,7 +78,7 @@ public abstract class AbstractChatProcessor {
     abstract Prompt prompt(LRequest lRequest);
     abstract RoleCard roleCard(LRequest lRequest);
     abstract List<String> worldBook(LRequest lRequest);
-    abstract LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages);
+    abstract LResponse transferAi(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages);
 
     public Flux<LResponse> syncStreamChatProcess(LRequest lRequest) throws IOException {
         List<HistoryMessage> history = historyBefore(lRequest);
@@ -87,7 +90,7 @@ public abstract class AbstractChatProcessor {
         String bucketName = "syncStream:bucket:" + UUID.randomUUID().toString();
         redisTemplate.opsForValue().set(bucketName, "");
         redisTemplate.opsForValue().set(bucketName + "Sync", "SYNC");
-        Flux<LResponse> lResponseFlux = transferAiStream(lRequest, okHttpClient, history, prompt, roleCard, worldBookMessages, bucketName);
+        Flux<LResponse> lResponseFlux = transferAiStream(lRequest, history, prompt, roleCard, worldBookMessages, bucketName);
 
         streamPool.submit(new Runnable() {
             @Override
@@ -132,6 +135,6 @@ public abstract class AbstractChatProcessor {
         return lResponseFlux;
     }
 
-    abstract Flux<LResponse> transferAiStream(LRequest lRequest, OkHttpClient okHttpClient, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException;
+    abstract Flux<LResponse> transferAiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException;
 
 }

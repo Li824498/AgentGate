@@ -48,6 +48,12 @@ public class GeminiProcessor extends AbstractChatProcessor {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private OkHttpClient okHttpClient;
+
 
 
     @Override
@@ -89,7 +95,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     }
 
     @Override
-    LResponse transferAi(LRequest lRequest, RestTemplate restTemplate, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
+    LResponse transferAi(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
         // todo 负载均衡设计 可能采用配置方式解决
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
@@ -136,7 +142,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     }
 
     @Override
-    Flux<LResponse> transferAiStream(LRequest lRequest, OkHttpClient okHttpClient, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException {
+    Flux<LResponse> transferAiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException {
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
         RequestBody requestBody = sendGeminiStream(lRequest, history, prompt, roleCard, worldBookMessages);

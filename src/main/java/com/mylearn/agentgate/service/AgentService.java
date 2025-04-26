@@ -1,5 +1,6 @@
 package com.mylearn.agentgate.service;
 
+import com.mylearn.agentgate.chain.Chain;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.core.processor.AbstractChatProcessor;
@@ -13,26 +14,18 @@ import java.io.IOException;
 
 @Service
 public class AgentService {
-    @Autowired
-    private ProcessorSelector processorSelector;
-
 
     @Autowired
-    private RestTemplate restTemplate;
+    private Chain chain;
+
+
 
     public LResponse syncNonStreamChatService(LRequest lRequest) {
-        AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
-
-        LResponse lResponse = processor.syncNonStreamChatProcess(lRequest, restTemplate);
-
-        return lResponse;
+        return chain.RenderNonChain(lRequest);
 
     }
 
     public Flux<LResponse> syncStreamChatService(LRequest lRequest) throws IOException {
-        AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
-
-        Flux<LResponse> lResponseFlux = processor.syncStreamChatProcess(lRequest);
-        return lResponseFlux;
+        return chain.RenderNonStreamChain(lRequest);
     }
 }
