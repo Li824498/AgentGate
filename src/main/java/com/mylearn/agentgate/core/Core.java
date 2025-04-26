@@ -16,14 +16,40 @@ public class Core {
     private ProcessorSelector processorSelector;
 
 
-    public LResponse syncNonStreamChatProcess(LRequest lRequest) {
+    /**
+     * 推理节点
+     * @param lRequest
+     * @return
+     */
+    public String syncNonStreamChatProcess(LRequest lRequest) {
         AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
 
         LResponse lResponse = processor.syncNonStreamChatProcess(lRequest);
 
-        return lResponse;
+        return lResponse.getInContext();
     }
 
+
+    /**
+     * 格式化节点
+     * @param lRequest
+     * @return
+     */
+    public String RenderChatProcess(LRequest lRequest, String inContext) {
+        AbstractChatProcessor processor = processorSelector.selectModel("gemini");
+
+        String outContext = processor.renderChatProcess(lRequest, inContext);
+
+        return outContext;
+    }
+
+
+    /**
+     * 流式节点
+     * @param lRequest
+     * @return
+     * @throws IOException
+     */
     public Flux<LResponse> syncStreamChatProcess(LRequest lRequest) throws IOException {
         AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
 

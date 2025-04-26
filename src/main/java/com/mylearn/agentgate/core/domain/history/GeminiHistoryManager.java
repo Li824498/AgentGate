@@ -49,7 +49,7 @@ public class GeminiHistoryManager implements HistoryManager {
         historyMessage.setChatId(lResponse.getChatId());
         historyMessage.setMsgIndex(lResponse.getMsgIndex());
         historyMessage.setRole("model");
-        historyMessage.setContext(lResponse.getContext());
+        historyMessage.setContext(lResponse.getInContext());
 
         historyMapper.insertHistory(historyMessage);
     }
@@ -77,7 +77,7 @@ public class GeminiHistoryManager implements HistoryManager {
 
         chatMeta.setChatId(lResponse.getChatId());
         chatMeta.setUserId(lResponse.getUserId());
-        chatMeta.setLastHistory(lResponse.getContext());
+        chatMeta.setLastHistory(lResponse.getInContext());
         chatMeta.setRoleCardId(lRequest.getRoleCardId());
 
         // todo 异步处理？？？

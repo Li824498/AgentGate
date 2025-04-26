@@ -2,14 +2,12 @@ package com.mylearn.agentgate.core.processor;
 
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.utils.UserIdUtils;
-import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
@@ -23,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 核心会话实体
  */
+// todo 这个类是不是太繁杂了
 @Component
 public abstract class AbstractChatProcessor {
 
@@ -112,7 +111,7 @@ public abstract class AbstractChatProcessor {
                 String context = redisTemplate.opsForValue().getAndDelete(bucketName);
                 System.out.println(context);
                 LResponse lResponse = new LResponse();
-                lResponse.setContext(context);
+                lResponse.setInContext(context);
                 lResponse.setUserId(lRequest.getUserId());
                 lResponse.setChatId(lRequest.getChatId());
                 lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
@@ -125,7 +124,7 @@ public abstract class AbstractChatProcessor {
 
         // todo 来个适配器模式兄弟
         LResponse lResponseSum = new LResponse();
-        lResponseSum.setContext("等待更新中");
+        lResponseSum.setInContext("等待更新中");
         lResponseSum.setUserId(UserIdUtils.getUserId());
         lResponseSum.setChatId(lRequest.getChatId());
         lResponseSum.setMsgIndex(lRequest.getMsgIndex() + 1);
@@ -137,4 +136,17 @@ public abstract class AbstractChatProcessor {
 
     abstract Flux<LResponse> transferAiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException;
 
+    // todo
+    public String renderChatProcess(LRequest lRequest, String inContext) {
+        // todo
+        List<Render> renders = renders(lRequest, inContext);
+//        String outContext = transferRenderAi(inContext, renders);
+        List<HistoryRendered> historyRenderedList = transferRenderAis(inContext, renders);
+        historyRendered(lRequest, outContext);
+        return outContext;
+    }
+
+    public abstract List<Render> renders(LRequest lRequest, String inContext);
+    public abstract List<HistoryRendered> transferRenderAis(String inContext, List<Render> renders);
+    public abstract void historyRendered(LRequest lRequest, String outContext);
 }

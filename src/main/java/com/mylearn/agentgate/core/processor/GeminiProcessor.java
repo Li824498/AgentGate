@@ -3,7 +3,9 @@ package com.mylearn.agentgate.core.processor;
 import com.alibaba.fastjson.JSON;
 import com.mylearn.agentgate.annoation.ModelType;
 import com.mylearn.agentgate.core.domain.history.GeminiHistoryManager;
+import com.mylearn.agentgate.core.domain.historyRendered.HistoryRenderedManager;
 import com.mylearn.agentgate.core.domain.prompt.PromptManager;
+import com.mylearn.agentgate.core.domain.render.RenderManager;
 import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
@@ -42,6 +44,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     @Autowired
     private PromptManager promptManager;
 
+    // todo 出bug了再改， 不出bug就不改，准备设计降级
     @Autowired
     private RoleCardManager roleCardManager;
 
@@ -53,6 +56,12 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private OkHttpClient okHttpClient;
+
+    @Autowired
+    private RenderManager renderManager;
+
+    @Autowired
+    private HistoryRenderedManager historyRenderedManager;
 
 
 
@@ -99,20 +108,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         // todo 负载均衡设计 可能采用配置方式解决
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
-        // todo 分情况模式的
-//        HttpEntity<Map<String, Object>> entity = sendGeminiText(lRequest);
-//        HttpEntity<Map<String, Object>> entity = sendGeminiTextWithHistory(lRequest, history);
-//        HttpEntity<Map<String, Object>> entity = sendGeminiTextWithHistoryAndPrompt(lRequest, history, prompt);
-
         HttpEntity<Map<String, Object>> entity = null;
-
-/*        if(history.isEmpty()) {
-            entity = sendGeminiText(lRequest);
-        } else if(prompt == null) {
-            entity = sendGeminiTextWithHistory(lRequest, history);
-        } else {
-            entity = sendGeminiTextWithHistoryAndPrompt(lRequest, history, prompt);
-        }*/
 
         entity = sendGemini(lRequest, history, prompt, roleCard, worldBookMessages);
 
@@ -133,7 +129,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
         // todo 建造者模式优化
         LResponse lResponse = new LResponse();
-        lResponse.setContext(text);
+        lResponse.setInContext(text);
         lResponse.setUserId(lRequest.getUserId());
         lResponse.setChatId(lRequest.getChatId());
         lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
@@ -187,7 +183,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
 
                                             LResponse lResponse = new LResponse();
-                                            lResponse.setContext(substring);
+                                            lResponse.setInContext(substring);
                                             lResponse.setUserId(UserIdUtils.getUserId());
                                             lResponse.setChatId(lRequest.getChatId());
                                             lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
@@ -203,6 +199,50 @@ public class GeminiProcessor extends AbstractChatProcessor {
             }
         });
         return lResponseFlux;
+    }
+
+    @Override
+    public List<Render> renders(LRequest lRequest, String inContext) {
+        List<Render> renders = renderManager.process(lRequest, inContext);
+        return renders;
+    }
+
+    @Override
+    public List<HistoryRendered> transferRenderAis(String inContext, List<Render> renders) {
+        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
+
+        // todo 线程池处理？排队？
+        HttpEntity<Map<String, Object>> entity = sendGeminiRender(inContext, render);
+
+        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+
+        String text = getGeminiText(response);
+        return text;
+    }
+
+    @Override
+    public void historyRendered(LRequest lRequest, String outContext) {
+        historyRenderedManager.processAfter
+    }
+
+    private HttpEntity<Map<String, Object>> sendGeminiRender(String inContext, Render render) {
+        String prompt = "请帮我把以下剧情映射为对应的格式，只输出对应的格式即可，多余的不要输出：";
+
+        String text = prompt + "\n" + "剧情状态：\n" + inContext + "\n\n\n" + "格式：\n" + render.getText();
+
+        Map<String, Object> part = Map.of("text", text);
+
+        Map<String, Object> message = Map.of("parts", List.of(part));
+
+        Map<String, Object> body = Map.of("contents", List.of(message));
+
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, httpHeaders);
+
+        return entity;
     }
 
     private RequestBody sendGeminiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
@@ -226,7 +266,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapStartText);
         //3.user-model:history
         for (HistoryMessage historyMessage : history) {
-//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getContext()));
+//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getInContext()));
             List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage.getContext()));
 
             Map<String, Object> mapHistory = new LinkedHashMap<>();
@@ -299,7 +339,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapStartText);
         //3.user-model:history
         for (HistoryMessage historyMessage : history) {
-//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getContext()));
+//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getInContext()));
             List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage.getContext()));
 
             Map<String, Object> mapHistory = new LinkedHashMap<>();

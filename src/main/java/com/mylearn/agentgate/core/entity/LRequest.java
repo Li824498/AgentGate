@@ -13,6 +13,7 @@ public class LRequest {
     public int roleCardId;
     public int msgIndex;
     public List<Long> worldBookIds;
+    public List<String> renders;
     public String modelName;
     public String api;
 
