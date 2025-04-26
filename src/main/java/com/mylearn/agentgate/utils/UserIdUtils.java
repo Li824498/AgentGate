@@ -11,7 +11,7 @@ public class UserIdUtils {
         threadLocal.set(userId);
     }
 
-    public static void removeUserId(String userId) {
+    public static void removeUserId() {
         threadLocal.remove();
     }
 }

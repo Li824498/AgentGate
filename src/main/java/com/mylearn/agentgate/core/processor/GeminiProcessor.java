@@ -1,5 +1,6 @@
 package com.mylearn.agentgate.core.processor;
 
+import com.alibaba.fastjson.JSON;
 import com.mylearn.agentgate.annoation.ModelType;
 import com.mylearn.agentgate.core.domain.history.GeminiHistoryManager;
 import com.mylearn.agentgate.core.domain.prompt.PromptManager;
@@ -7,15 +8,28 @@ import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.exception.AgentException;
+import com.mylearn.agentgate.utils.UserIdUtils;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import okio.BufferedSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
+import java.util.function.Consumer;
 
 @Component
+@Slf4j
 @ModelType(value = "gemini")
 public class GeminiProcessor extends AbstractChatProcessor {
 
@@ -30,6 +44,9 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private RoleCardManager roleCardManager;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
 
 
@@ -116,6 +133,143 @@ public class GeminiProcessor extends AbstractChatProcessor {
         lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
 
         return lResponse;
+    }
+
+    @Override
+    Flux<LResponse> transferAiStream(LRequest lRequest, OkHttpClient okHttpClient, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException {
+        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
+
+        RequestBody requestBody = sendGeminiStream(lRequest, history, prompt, roleCard, worldBookMessages);
+
+
+        Request request = new Request.Builder()
+                .url(apiUrl)
+                .post(requestBody)
+                .build();
+
+        Response response = okHttpClient.newCall(request).execute();
+        ResponseBody responseBody = response.body();
+
+
+        Flux<LResponse> lResponseFlux = Flux.create(new Consumer<FluxSink<LResponse>>() {
+            @Override
+            public void accept(FluxSink<LResponse> fluxSink) {
+                BufferedSource bufferedSource = responseBody.source();
+                Mono.delay(Duration.ZERO)
+                        .subscribe(new Consumer<Long>() {
+                            @Override
+                            public void accept(Long aLong) {
+                                    while (true) {
+                                        try {
+                                            if (bufferedSource.exhausted()) break;
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        String line = null;
+                                        try {
+                                            line = bufferedSource.readUtf8Line();
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+
+
+                                        if (line.startsWith("            \"text\": ")) {
+                                            String substring = line.substring(21, line.length() - 1);
+
+                                            redisTemplate.opsForValue().append(bucketName, substring);
+
+
+
+                                            LResponse lResponse = new LResponse();
+                                            lResponse.setContext(substring);
+                                            lResponse.setUserId(UserIdUtils.getUserId());
+                                            lResponse.setChatId(lRequest.getChatId());
+                                            lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
+
+                                            fluxSink.next(lResponse);
+                                        }
+                                    }
+                                    redisTemplate.opsForValue().getAndDelete(bucketName + "Sync");
+                                    fluxSink.complete();
+
+                            }
+                        });
+            }
+        });
+        return lResponseFlux;
+    }
+
+    private RequestBody sendGeminiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
+        // 1.user:prompt
+        List<Map> contents = new ArrayList<>();
+
+//        List<Map<String, String>> partsPrompt = List.of(Map.of("text", prompt == null ? "" : prompt.getText()));
+        List<Map<String, String>> partsPrompt = List.of(Map.of("text", Optional.ofNullable(prompt).map(Prompt::getText).orElse("")));
+        Map<String, Object> mapPrompt = new LinkedHashMap<>();
+        mapPrompt.put("role", "user");
+        mapPrompt.put("parts", partsPrompt);
+
+        contents.add(mapPrompt);
+        //2.model:角色卡开头
+//        List<Map<String, String>> partsStartText = List.of(Map.of("test", roleCard == null ? "" : roleCard.getStartText()));
+        List<Map<String, String>> partsStartText = List.of(Map.of("text", Optional.ofNullable(roleCard).map(RoleCard::getStartText).orElse("")));
+        Map<String, Object> mapStartText = new LinkedHashMap<>();
+        mapStartText.put("role", "model");
+        mapStartText.put("parts", partsStartText);
+
+        contents.add(mapStartText);
+        //3.user-model:history
+        for (HistoryMessage historyMessage : history) {
+//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getContext()));
+            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage.getContext()));
+
+            Map<String, Object> mapHistory = new LinkedHashMap<>();
+            mapHistory.put("role", historyMessage.getRole());
+            mapHistory.put("parts", partsHistory);
+
+            contents.add(mapHistory);
+        }
+        //4.user:
+        StringBuffer textLastText = new StringBuffer();
+        //4.1键入消息
+        textLastText.append(lRequest.getContext());
+        //4.2角色卡设定
+        textLastText.append(Optional.ofNullable(roleCard).map(RoleCard::getSettingText).orElse(""));
+        //4.3worldBook
+        textLastText.append(worldBookMessages);
+
+        List<Map<String, String>> partsLastText = List.of(Map.of("text", textLastText.toString()));
+        Map<String, Object> mapLastText = new LinkedHashMap<>();
+        mapLastText.put("role", "user");
+        mapLastText.put("parts", partsLastText);
+
+        contents.add(mapLastText);
+        //5稳定输出
+        //5.1model
+        String textPlusModel = "推荐以下面的指令&剧情继续：\n" + lRequest.getContext();
+        List<Map<String, String>> partsPlusModel = List.of(Map.of("text", textPlusModel));
+        Map<String, Object> mapPlusModel = new LinkedHashMap<>();
+        mapPlusModel.put("role", "model");
+        mapPlusModel.put("parts", partsPlusModel);
+
+        contents.add(mapPlusModel);
+        //5.2user
+        String textPlusUser = "继续";
+        List<Map<String, String>> partsPlusUser = List.of(Map.of("text", textPlusUser));
+        Map<String, Object> mapPlusUser = new LinkedHashMap<>();
+        mapPlusUser.put("role", "model");
+        mapPlusUser.put("parts", partsPlusUser);
+
+        contents.add(mapPlusUser);
+
+
+        Map<String, Object> body = Map.of("contents", contents);
+
+        String jsonString = JSON.toJSONString(body);
+        okhttp3.MediaType mediaType = okhttp3.MediaType.parse("application/json; charset=utf-8");
+
+        RequestBody requestBody = RequestBody.create(jsonString, mediaType);
+        return requestBody;
     }
 
     private HttpEntity<Map<String, Object>> sendGemini(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
