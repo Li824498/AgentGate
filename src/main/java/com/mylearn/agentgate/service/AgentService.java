@@ -24,7 +24,7 @@ public class AgentService {
     public LResponse syncNonStreamChatService(LRequest lRequest) {
 //        return chain.RenderNonChain(lRequest);
         List<String> renders = lRequest.getRenders();
-        if (renders.size() == 1 && renders.get(0).equals("不使用渲染")) {
+        if (renders == null || (renders.size() == 1 && renders.get(0).equals("不使用渲染"))) {
             return chain.RenderNonChain(lRequest);
         } else {
             return chain.RenderChain(lRequest);

@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 渲染套件
+ */
 @RestController
 @RequestMapping("/api/suiteRender")
 public class SuiteRenderController {

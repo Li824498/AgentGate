@@ -12,4 +12,21 @@
             (#{item.msgIndex}, #{item.renderType}, #{item.outContext}, #{item.historyId})
         </foreach>
     </insert>
+
+    <select id="getByHistoryId" resultType="com.mylearn.agentgate.core.entity.HistoryRendered"
+            parameterType="java.lang.String">
+        select id, msg_index, render_type, out_context, history_id, create_time, update_time
+        from tb_history_rendered
+        where history_id = #{historyId}
+    </select>
+
+    <select id="batchGetByHistoryIds" resultType="com.mylearn.agentgate.core.entity.HistoryRendered"
+            parameterType="java.util.List">
+        select id, msg_index, render_type, out_context, history_id, create_time, update_time
+        from tb_history_rendered
+        where history_id in
+              <foreach collection="list" item="item" open="(" close=")" separator=",">
+                  #{item}
+              </foreach>
+    </select>
 </mapper>

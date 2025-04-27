@@ -10,4 +10,8 @@ import java.util.List;
 public interface HistoryRenderedMapper {
 
     void batchInsert(@Param("historyRenderedList") List<HistoryRendered> historyRenderedList);
+
+    List<HistoryRendered> getByHistoryId(Long historyId);
+
+    List<HistoryRendered> batchGetByHistoryIds(List<Long> historyIds);
 }

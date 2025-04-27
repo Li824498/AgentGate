@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * 渲染组件
+ */
 @RestController
 @RequestMapping("/api/render")
 public class RenderController {

@@ -45,11 +45,12 @@ public class SuiteRenderService {
     }
 
     public void save(SuiteRenderDTO suiteRenderDTO) {
+        int id = suiteIdUtils.nextId();
         List<SuiteRender> suiteRenderList = suiteRenderDTO.getRenderMap().entrySet().stream().map(new Function<Map.Entry<Long, String>, SuiteRender>() {
             @Override
             public SuiteRender apply(Map.Entry<Long, String> longStringEntry) {
                 SuiteRender suiteRender = new SuiteRender();
-                suiteRender.setId(suiteIdUtils.nextId());
+                suiteRender.setId(id);
                 suiteRender.setName(suiteRenderDTO.getName());
                 suiteRender.setDescription(suiteRenderDTO.getDescription());
                 suiteRender.setRenderId(longStringEntry.getKey());
