@@ -23,9 +23,8 @@ export const useSettingsStore = defineStore('settings', {
       worldBookIds: []
     },
     renderSettings: {
-      theme: 'default',
-      fontSize: 14,
-      spacing: 1.5
+      suite: 'default',
+      renders: ['不使用渲染']
     }
   }),
   persist: {

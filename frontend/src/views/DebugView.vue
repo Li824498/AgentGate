@@ -37,7 +37,7 @@
       <!-- 主内容区 -->
       <el-container>
         <el-main>
-          <!-- 默认显示聊天窗口 -->
+          <!-- 聊天窗口 -->
           <div class="chat-container">
             <div class="chat-box" ref="chatBox">
               <div v-for="(message, index) in messages" :key="index" class="message" :class="message.role">
@@ -46,7 +46,15 @@
                   <span class="time">{{ formatTime(message.createTime) }}</span>
                 </div>
                 <div class="message-content">
-                  <pre>{{ message.context }}</pre>
+                  <span>{{ message.context }}</span>
+                </div>
+                <div v-if="message.renderedList && message.renderedList.length > 0" class="rendered-list">
+                  <div v-for="(rendered, rIndex) in message.renderedList" :key="rIndex" class="rendered-item">
+                    <div class="rendered-type">{{ rendered.renderType }}</div>
+                    <div class="rendered-content">
+                      <pre>{{ rendered.outContext }}</pre>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -125,18 +133,18 @@ import { http } from '@/utils/http'
 
 const router = useRouter()
 const route = useRoute()
+const settingsStore = useSettingsStore()
 
+// 状态
 const isChatView = computed(() => route.path === '/')
 const dialogVisible = ref(false)
 const currentDialogTitle = ref('')
 const currentComponent = shallowRef(null)
-
 const messages = ref([])
 const inputMessage = ref('')
 const chatBox = ref(null)
 
-const settingsStore = useSettingsStore()
-
+// 组件映射
 const components = {
   '1': ModelSettings,
   '2': PresetSettings,
@@ -155,6 +163,7 @@ const titles = {
   '6': '渲染设置'
 }
 
+// 方法
 const handleSelect = (key) => {
   currentDialogTitle.value = titles[key]
   currentComponent.value = components[key]
@@ -162,7 +171,6 @@ const handleSelect = (key) => {
 }
 
 const handleClose = () => {
-  // 保存设置到全局状态
   if (currentComponent.value) {
     const settingsKey = Object.keys(components).find(key => components[key] === currentComponent.value)
     if (settingsKey) {
@@ -185,31 +193,51 @@ const sendMessage = async () => {
     roleCardId: settingsStore.characterSettings.character ? parseInt(settingsStore.characterSettings.character) : 0,
     msgIndex: currentMsgIndex,
     worldBookIds: settingsStore.sessionSettings.worldBookIds || [],
+    renders: settingsStore.renderSettings.renders || ['不使用渲染'],
     modelName: settingsStore.modelSettings.modelName,
     api: settingsStore.modelSettings.api
   }
 
-  // 添加用户消息到界面
-  messages.value.push({
+  // 添加用户消息
+  const userMessage = {
     role: 'user',
     context: inputMessage.value,
     createTime: new Date().toISOString()
-  })
+  }
+  
+  messages.value = [...messages.value, userMessage]
   inputMessage.value = ''
+
+  await nextTick()
+  if (chatBox.value) {
+    chatBox.value.scrollTop = chatBox.value.scrollHeight
+  }
 
   try {
     const result = await http.post('/api/chat', request)
     if (result.code === 0) {
-      // 添加AI响应到界面
-      messages.value.push({
+      // 添加AI响应
+      const assistantMessage = {
         role: 'assistant',
-        context: result.data.context,
-        createTime: new Date().toISOString()
-      })
-      // 更新消息索引，步进2
+        context: result.data.inContext || result.data.context,
+        createTime: new Date().toISOString(),
+        renderedList: result.data.outContext ? [{
+          renderType: '输出',
+          outContext: result.data.outContext
+        }] : []
+      }
+      
+      messages.value = [...messages.value, assistantMessage]
+      
+      // 更新消息索引
       settingsStore.sessionSettings = {
         ...settingsStore.sessionSettings,
         msgIndex: currentMsgIndex + 2
+      }
+      
+      await nextTick()
+      if (chatBox.value) {
+        chatBox.value.scrollTop = chatBox.value.scrollHeight
       }
     } else {
       ElMessage.error('发送消息失败：' + result.message)
@@ -217,11 +245,31 @@ const sendMessage = async () => {
   } catch (error) {
     ElMessage.error('发送消息失败：' + error.message)
   }
+}
 
-  // 滚动到底部
-  await nextTick()
-  if (chatBox.value) {
-    chatBox.value.scrollTop = chatBox.value.scrollHeight
+const fetchHistories = async (chatId) => {
+  try {
+    const result = await http.get(`/api/chat/${chatId}`)
+    if (result.code === 0) {
+      messages.value = result.data.map(item => ({
+        role: item.historyMessage.role,
+        context: item.historyMessage.inContext || item.historyMessage.context,
+        createTime: item.historyMessage.createTime,
+        renderedList: item.historyRenderedList || (item.historyMessage.outContext ? [{
+          renderType: '输出',
+          outContext: item.historyMessage.outContext
+        }] : [])
+      }))
+      
+      await nextTick()
+      if (chatBox.value) {
+        chatBox.value.scrollTop = chatBox.value.scrollHeight
+      }
+    } else {
+      ElMessage.error('获取历史消息失败：' + result.message)
+    }
+  } catch (error) {
+    ElMessage.error('获取历史消息失败：' + error.message)
   }
 }
 
@@ -239,30 +287,10 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-// 格式化时间
 const formatTime = (timeString) => {
   if (!timeString) return ''
   const date = new Date(timeString)
   return date.toLocaleString()
-}
-
-// 获取历史消息
-const fetchHistories = async (chatId) => {
-  try {
-    const result = await http.get(`/api/chat/${chatId}`)
-    if (result.code === 0) {
-      messages.value = result.data
-      // 滚动到底部
-      await nextTick()
-      if (chatBox.value) {
-        chatBox.value.scrollTop = chatBox.value.scrollHeight
-      }
-    } else {
-      ElMessage.error('获取历史消息失败：' + result.message)
-    }
-  } catch (error) {
-    ElMessage.error('获取历史消息失败：' + error.message)
-  }
 }
 
 // 监听会话变化
@@ -356,16 +384,21 @@ watch(() => settingsStore.sessionSettings.currentChatId, (newChatId) => {
   padding: 15px;
   border-radius: 8px;
   background-color: #f5f7fa;
+  border: 1px solid #e6e6e6;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .message.user {
   background-color: #e6f7ff;
   margin-left: 20%;
+  border-color: #91d5ff;
 }
 
 .message.assistant {
   background-color: #f0f9eb;
   margin-right: 20%;
+  border-color: #b3e19d;
 }
 
 .message-header {
@@ -373,6 +406,7 @@ watch(() => settingsStore.sessionSettings.currentChatId, (newChatId) => {
   justify-content: space-between;
   margin-bottom: 10px;
   font-size: 14px;
+  color: #606266;
 }
 
 .message-header .role {
@@ -387,13 +421,56 @@ watch(() => settingsStore.sessionSettings.currentChatId, (newChatId) => {
 .message-content {
   color: #303133;
   line-height: 1.5;
-}
-
-.message-content pre {
-  margin: 0;
+  font-size: 14px;
   white-space: pre-wrap;
   word-wrap: break-word;
+  padding: 5px 0;
+}
+
+.rendered-list {
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.rendered-item {
+  background-color: #fdf6ec;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #faecd8;
+}
+
+.rendered-type {
+  font-size: 14px;
+  color: #e6a23c;
+  margin-bottom: 10px;
+  font-weight: bold;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #faecd8;
+}
+
+.rendered-content {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 0;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid #ebeef5;
+}
+
+.rendered-content pre {
+  margin: 0;
+  padding: 0;
   font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .input-area {

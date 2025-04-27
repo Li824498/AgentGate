@@ -16,6 +16,7 @@ const httpInterceptor = {
   
   // 响应拦截
   response: (response) => {
+    // 直接返回响应数据
     return response
   },
   
@@ -35,7 +36,7 @@ export const http = {
     try {
       const response = await fetch(url, config)
       const result = await response.json()
-      return httpInterceptor.response(result)
+      return result
     } catch (error) {
       return httpInterceptor.error(error)
     }
@@ -67,7 +68,7 @@ export const http = {
     try {
       const response = await fetch(url, config)
       const result = await response.json()
-      return httpInterceptor.response(result)
+      return result
     } catch (error) {
       return httpInterceptor.error(error)
     }
