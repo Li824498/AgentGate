@@ -4,9 +4,11 @@ import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.Render;
 import com.mylearn.agentgate.mapper.RenderMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class GeminiRenderManager implements RenderManager{
     @Autowired
     private RenderMapper renderMapper;

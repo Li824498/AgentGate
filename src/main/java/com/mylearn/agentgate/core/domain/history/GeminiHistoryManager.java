@@ -4,6 +4,7 @@ import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import com.mylearn.agentgate.mapper.HistoryMapper;
 import com.mylearn.agentgate.mapper.RoleCardMapper;
+import com.mylearn.agentgate.utils.HistoryIdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +53,7 @@ public class GeminiHistoryManager implements HistoryManager {
         historyMessage.setContext(lResponse.getInContext());
 
         historyMapper.insertHistory(historyMessage);
+        HistoryIdUtils.set(historyMessage.getId());
     }
 
     @Override

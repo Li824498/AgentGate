@@ -8,6 +8,9 @@
             parameterType="java.lang.String">
         select id, name, description, text, create_time, update_time
         from tb_render
-        where name = #{name}
+        where name in
+        <foreach collection="renders" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
     </select>
 </mapper>

@@ -137,16 +137,17 @@ public abstract class AbstractChatProcessor {
     abstract Flux<LResponse> transferAiStream(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages, String bucketName) throws IOException;
 
     // todo
-    public String renderChatProcess(LRequest lRequest, String inContext) {
+    public List<HistoryRendered> renderChatProcess(LRequest lRequest, LResponse lResponse) {
         // todo
-        List<Render> renders = renders(lRequest, inContext);
+        List<Render> renders = renders(lRequest, lResponse.getInContext());
 //        String outContext = transferRenderAi(inContext, renders);
-        List<HistoryRendered> historyRenderedList = transferRenderAis(inContext, renders);
-        historyRendered(lRequest, outContext);
-        return outContext;
+        List<HistoryRendered> historyRenderedList = transferRenderAis(lRequest, lResponse, renders);
+        // todo 应该是从这里开始改，写
+        historyRendered(lRequest, historyRenderedList);
+        return historyRenderedList;
     }
 
     public abstract List<Render> renders(LRequest lRequest, String inContext);
-    public abstract List<HistoryRendered> transferRenderAis(String inContext, List<Render> renders);
-    public abstract void historyRendered(LRequest lRequest, String outContext);
+    public abstract List<HistoryRendered> transferRenderAis(LRequest lRequest, LResponse lResponse, List<Render> renders);
+    public abstract void historyRendered(LRequest lRequest, List<HistoryRendered> historyRenderedList);
 }

@@ -1,5 +1,6 @@
 package com.mylearn.agentgate.core;
 
+import com.mylearn.agentgate.core.entity.HistoryRendered;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.core.processor.AbstractChatProcessor;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class Core {
@@ -21,12 +23,12 @@ public class Core {
      * @param lRequest
      * @return
      */
-    public String syncNonStreamChatProcess(LRequest lRequest) {
+    public LResponse syncNonStreamChatProcess(LRequest lRequest) {
         AbstractChatProcessor processor = processorSelector.selectModel(lRequest.getModelName());
 
         LResponse lResponse = processor.syncNonStreamChatProcess(lRequest);
 
-        return lResponse.getInContext();
+        return lResponse;
     }
 
 
@@ -35,12 +37,12 @@ public class Core {
      * @param lRequest
      * @return
      */
-    public String RenderChatProcess(LRequest lRequest, String inContext) {
+    public List<HistoryRendered> RenderChatProcess(LRequest lRequest, LResponse lResponse) {
         AbstractChatProcessor processor = processorSelector.selectModel("gemini");
 
-        String outContext = processor.renderChatProcess(lRequest, inContext);
+        List<HistoryRendered> historyRenderedList = processor.renderChatProcess(lRequest, lResponse);
 
-        return outContext;
+        return historyRenderedList;
     }
 
 

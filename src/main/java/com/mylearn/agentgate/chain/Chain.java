@@ -1,6 +1,7 @@
 package com.mylearn.agentgate.chain;
 
 import com.mylearn.agentgate.core.Core;
+import com.mylearn.agentgate.core.entity.HistoryRendered;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
 import com.mylearn.agentgate.utils.UserIdUtils;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class Chain {
@@ -16,13 +19,12 @@ public class Chain {
     private Core core;
 
     public LResponse RenderNonChain(LRequest lRequest) {
-        String inContext = core.syncNonStreamChatProcess(lRequest);
+        LResponse lResponse = core.syncNonStreamChatProcess(lRequest);
 
-        LResponse lResponse = new LResponse();
         lResponse.setMsgIndex(lRequest.getMsgIndex() + 1);
         lResponse.setUserId(UserIdUtils.getUserId());
         lResponse.setChatId(lResponse.getChatId());
-        lResponse.setInContext(inContext);
+        lResponse.setOutContext(Collections.emptyList());
 
         return lResponse;
     }
@@ -32,8 +34,12 @@ public class Chain {
     }
 
     public LResponse RenderChain(LRequest lRequest) {
-        String inContext = core.syncNonStreamChatProcess(lRequest);
+        LResponse lResponse = core.syncNonStreamChatProcess(lRequest);
 
-        String outContext = core.RenderChatProcess(lRequest, inContext);
+        List<HistoryRendered> historyRenderedList = core.RenderChatProcess(lRequest, lResponse);
+
+        lResponse.setOutContext(historyRenderedList);
+
+        return lResponse;
     }
 }

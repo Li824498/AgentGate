@@ -10,6 +10,7 @@ import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.exception.AgentException;
+import com.mylearn.agentgate.utils.HistoryIdUtils;
 import com.mylearn.agentgate.utils.UserIdUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -28,7 +29,10 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -62,6 +66,17 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private HistoryRenderedManager historyRenderedManager;
+
+    // todo 扛不住一点并发啊
+    private static final ThreadPoolExecutor renderThreadPool = new ThreadPoolExecutor(
+            16,
+            32,
+            10,
+            TimeUnit.MINUTES,
+            new LinkedBlockingDeque<>(100),
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.AbortPolicy()
+    );
 
 
 
@@ -208,21 +223,88 @@ public class GeminiProcessor extends AbstractChatProcessor {
     }
 
     @Override
-    public List<HistoryRendered> transferRenderAis(String inContext, List<Render> renders) {
+    public List<HistoryRendered> transferRenderAis(LRequest lRequest, LResponse lResponse, List<Render> renders) {
         String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
 
-        // todo 线程池处理？排队？
+        Map<Future<ResponseEntity<Map>>, String> lfutureMap = new HashMap<>();
+
+        for (Render render : renders) {
+            Future<ResponseEntity<Map>> entityFuture = renderThreadPool.submit(new Callable<ResponseEntity<Map>>() {
+                @Override
+                public ResponseEntity<Map> call() throws Exception {
+                    HttpEntity<Map<String, Object>> entity = sendGeminiRender(lResponse.getInContext(), render);
+
+                    ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+                    return response;
+                }
+            });
+
+            lfutureMap.put(entityFuture, render.getName());
+        }
+
+        List<HistoryRendered> historyRendereds = lfutureMap.keySet().stream().map(new Function<Future<ResponseEntity<Map>>, HistoryRendered>() {
+            @Override
+            public HistoryRendered apply(Future<ResponseEntity<Map>> responseEntityFuture) {
+                ResponseEntity<Map> response = null;
+                try {
+                    response = responseEntityFuture.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                String text = getGeminiText(response);
+                HistoryRendered historyRendered = new HistoryRendered();
+                historyRendered.setMsgIndex(lRequest.getMsgIndex() + 1);
+                historyRendered.setRenderType(lfutureMap.get(responseEntityFuture));
+                historyRendered.setOutContext(getGeminiText(response));
+                // todo 使用线程池
+                historyRendered.setHistoryId(HistoryIdUtils.get());
+                return historyRendered;
+            }
+        }).collect(Collectors.toList());
+
+        HistoryIdUtils.remove();
+
+        return historyRendereds;
+
+
+
+/*        lfutureList.stream().map(new Function<Future<ResponseEntity<Map>>, LResponse>() {
+            @Override
+            public LResponse apply(Future<ResponseEntity<Map>> responseEntityFuture) {
+                ResponseEntity<Map> response = null;
+                try {
+                    response = responseEntityFuture.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                String text = getGeminiText(response);
+                HistoryRendered historyRendered = new HistoryRendered();
+                historyRendered.setMsgIndex(lRequest.getMsgIndex());
+                historyRendered.setRenderType();
+                return text;
+            }
+        }).collect()*/
+
+
+
+/*        new Callable<ResponseEntity<Map>>() {
+            @Override
+            public ResponseEntity<Map> call() throws Exception {
+                return null;
+            }
+        }*/
+
+/*        // todo 线程池处理？排队？
         HttpEntity<Map<String, Object>> entity = sendGeminiRender(inContext, render);
 
-        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);*/
 
-        String text = getGeminiText(response);
-        return text;
+//        String text = getGeminiText(response);
     }
 
     @Override
-    public void historyRendered(LRequest lRequest, String outContext) {
-        historyRenderedManager.processAfter
+    public void historyRendered(LRequest lRequest, List<HistoryRendered> historyRenderedList) {
+        historyRenderedManager.processAfters(lRequest, historyRenderedList);
     }
 
     private HttpEntity<Map<String, Object>> sendGeminiRender(String inContext, Render render) {

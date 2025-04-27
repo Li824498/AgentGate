@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mylearn.agentgate.mapper.HistoryRenderedMapper">
+
+    <insert id="batchInsert"
+            parameterType="java.util.List">
+        insert into tb_history_rendered
+        (msg_index, render_type, out_context, history_id)
+        values <foreach collection="historyRenderedList" open="" close="" separator="," item="item">
+            (#{item.msgIndex}, #{item.renderType}, #{item.outContext}, #{item.historyId})
+        </foreach>
+    </insert>
+</mapper>
