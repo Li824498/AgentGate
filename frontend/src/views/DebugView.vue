@@ -31,6 +31,10 @@
             <el-icon><Picture /></el-icon>
             <span>渲染设置</span>
           </el-menu-item>
+          <el-menu-item index="7">
+            <el-icon><Connection /></el-icon>
+            <span>流式调试</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -119,7 +123,8 @@ import {
   Picture,
   View,
   SwitchButton,
-  Collection
+  Collection,
+  Connection
 } from '@element-plus/icons-vue'
 import ModelSettings from './ModelSettings.vue'
 import PresetSettings from './PresetSettings.vue'
@@ -127,6 +132,7 @@ import CharacterSettings from './CharacterSettings.vue'
 import SessionSettings from './SessionSettings.vue'
 import RenderSettings from './RenderSettings.vue'
 import WorldBookSettings from './WorldBookSettings.vue'
+import StreamDebugger from './StreamDebugger.vue'
 import { useSettingsStore } from '@/stores/settings'
 import { ElMessage } from 'element-plus'
 import { http } from '@/utils/http'
@@ -151,7 +157,8 @@ const components = {
   '3': CharacterSettings,
   '4': SessionSettings,
   '5': WorldBookSettings,
-  '6': RenderSettings
+  '6': RenderSettings,
+  '7': StreamDebugger
 }
 
 const titles = {
@@ -160,7 +167,8 @@ const titles = {
   '3': '角色卡设置',
   '4': '会话选择设置',
   '5': '世界书设置',
-  '6': '渲染设置'
+  '6': '渲染设置',
+  '7': '流式调试'
 }
 
 // 方法
@@ -261,9 +269,9 @@ const fetchHistories = async (chatId) => {
         }] : [])
       }))
       
-      await nextTick()
-      if (chatBox.value) {
-        chatBox.value.scrollTop = chatBox.value.scrollHeight
+  await nextTick()
+  if (chatBox.value) {
+    chatBox.value.scrollTop = chatBox.value.scrollHeight
       }
     } else {
       ElMessage.error('获取历史消息失败：' + result.message)

@@ -64,7 +64,7 @@
               <el-table-column prop="name" label="组件名称" />
               <el-table-column prop="description" label="描述" />
             </el-table>
-          </div>
+              </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -107,7 +107,7 @@ const fetchSuites = async () => {
       suiteList.value = result.data
     } else {
       ElMessage.error('获取渲染套件列表失败：' + result.message)
-    }
+}
   } catch (error) {
     ElMessage.error('获取渲染套件列表失败：' + error.message)
   }
