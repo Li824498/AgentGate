@@ -90,8 +90,8 @@ public abstract class AbstractChatProcessor {
         redisTemplate.opsForValue().set(bucketName, "");
         redisTemplate.opsForValue().set(bucketName + "Sync", "SYNC");
         Flux<LResponse> lResponseFlux = transferAiStream(lRequest, history, prompt, roleCard, worldBookMessages, bucketName);
-
-        streamPool.submit(new Runnable() {
+        // 已使用消息队列优化
+/*        streamPool.submit(new Runnable() {
             @Override
             public void run() {
                 log.info("子线程启动！");
@@ -120,7 +120,9 @@ public abstract class AbstractChatProcessor {
 
                 redisTemplate.opsForValue().getAndDelete(bucketName + "Sync");
             }
-        });
+        });*/
+
+
 
         // todo 来个适配器模式兄弟
         LResponse lResponseSum = new LResponse();

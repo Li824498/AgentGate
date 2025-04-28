@@ -4,7 +4,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * 加密/校验工具类
- * 肯定热使用，登录就用，双检锁你妈
+ * 肯定热使用，登录就用，双检锁你妈，但是这不是单例模式啊
  */
 public class PasswordUtil {
     private final static BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

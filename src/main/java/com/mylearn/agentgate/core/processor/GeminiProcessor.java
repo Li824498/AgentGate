@@ -9,12 +9,14 @@ import com.mylearn.agentgate.core.domain.render.RenderManager;
 import com.mylearn.agentgate.core.domain.roleCard.RoleCardManager;
 import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
+import com.mylearn.agentgate.core.listener.HistoryMqMessage;
 import com.mylearn.agentgate.exception.AgentException;
 import com.mylearn.agentgate.utils.HistoryIdUtils;
 import com.mylearn.agentgate.utils.UserIdUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okio.BufferedSource;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
@@ -66,6 +68,9 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
     @Autowired
     private HistoryRenderedManager historyRenderedManager;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     // todo 扛不住一点并发啊
     private static final ThreadPoolExecutor renderThreadPool = new ThreadPoolExecutor(
@@ -195,6 +200,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
                                             redisTemplate.opsForValue().append(bucketName, substring);
 
+                                            log.info(substring);
 
 
                                             LResponse lResponse = new LResponse();
@@ -206,9 +212,14 @@ public class GeminiProcessor extends AbstractChatProcessor {
                                             fluxSink.next(lResponse);
                                         }
                                     }
-                                    redisTemplate.opsForValue().getAndDelete(bucketName + "Sync");
-                                    fluxSink.complete();
 
+                                HistoryMqMessage historyMqMessage = new HistoryMqMessage();
+                                historyMqMessage.setBucketName(bucketName);
+                                historyMqMessage.setLRequest(lRequest);
+                                log.info("发送了消息！" + historyMqMessage.toString());
+                                rabbitTemplate.convertAndSend("history.stream.exchange", "historyStream", historyMqMessage);
+
+                                fluxSink.complete();
                             }
                         });
             }
