@@ -13,4 +13,14 @@
     <select id="selectAllModels" resultType="java.lang.String">
         select DISTINCT model from tb_model_api;
     </select>
+    <select id="selectEmbApis" resultType="java.lang.String">
+        select api
+        from tb_model_api
+        where model = 'text-embedding-3-small'
+    </select>
+    <select id="selectChatApis" resultType="java.lang.String" parameterType="java.lang.String">
+        select api
+        from tb_model_api
+        where model = #{model}
+    </select>
 </mapper>

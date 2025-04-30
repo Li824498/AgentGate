@@ -32,6 +32,9 @@ public class WorldBookManager {
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private EmbedUtils embedUtils;
+
     public List<String> process(LRequest lRequest) {
 /*        List<WorldBook> worldBooks = worldBookMapper.selectByIds(lRequest.getWorldBookIds());
         Set<InMemoryEmbeddingStore<TextSegment>> inMemoryEmbeddingStores = worldBooks.stream().map(worldBook -> InMemoryEmbeddingStore.fromFile(worldBook.getUrl())).collect(Collectors.toSet());
@@ -40,7 +43,7 @@ public class WorldBookManager {
         InMemoryEmbeddingStore<TextSegment> embeddingStore = getFromCaffeineCache(lRequest.getWorldBookIds());
 
         EmbeddingSearchResult<TextSegment> result = embeddingStore.search(EmbeddingSearchRequest.builder()
-                .queryEmbedding(EmbedUtils.embText2Embedding(lRequest.getContext()))
+                .queryEmbedding(embedUtils.embText2Embedding(lRequest.getContext()))
                 .maxResults(10)
                 .build());
 

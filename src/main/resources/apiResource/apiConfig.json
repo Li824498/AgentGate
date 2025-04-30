@@ -1,0 +1,16 @@
+{
+  "chatApi": {
+    "gemini": {
+      "gemini-1.5-flash": [
+        "AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E"
+      ]
+    }
+  },
+  "embApi": {
+    "openai": {
+      "text-embedding-3-small": [
+        "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"
+      ]
+    }
+  }
+}

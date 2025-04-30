@@ -10,4 +10,8 @@ public interface ModelApiMapper {
     void insertModelAndApi(String model, String api);
 
     List<String> selectAllModels();
+
+    List<String> selectEmbApis();
+
+    List<String> selectChatApis(String model);
 }

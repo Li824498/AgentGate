@@ -1,22 +1,36 @@
 package com.mylearn.agentgate.utils;
 
+import com.mylearn.agentgate.service.ModelApiService;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EmbedUtils {
-    private static OpenAiEmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
-            .apiKey("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")
-            .modelName("text-embedding-3-small")
-            .build();
+    @Autowired
+    private ModelApiService modelApiService;
 
-    public static @NonNull Embedding embText2Embedding(String text) {
+
+    private OpenAiEmbeddingModel embeddingModel;
+
+    @PostConstruct
+    public void init() {
+        embeddingModel = OpenAiEmbeddingModel.builder()
+                .apiKey(modelApiService.getEmbApi())
+                .modelName(modelApiService.EMB_MODEL_NAME)
+                .build();
+    }
+
+    public @NonNull Embedding embText2Embedding(String text) {
         Response<Embedding> embed = embeddingModel.embed(text);
         return embed.content();
     }
 
-    public static OpenAiEmbeddingModel getEmbeddingModel() {
+    public OpenAiEmbeddingModel getEmbeddingModel() {
         return embeddingModel;
     }
 }

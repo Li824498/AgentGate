@@ -51,6 +51,9 @@ public class WorldBookService {
     @Autowired
     private WorldBookMapper worldBookMapper;
 
+    @Autowired
+    private EmbedUtils embedUtils;
+
 
     private final static String DBDAOPath = "src/main/resources/DBDAO/";
 
@@ -93,7 +96,7 @@ public class WorldBookService {
 
 
                 InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-                OpenAiEmbeddingModel embeddingModel = EmbedUtils.getEmbeddingModel();
+                OpenAiEmbeddingModel embeddingModel = embedUtils.getEmbeddingModel();
                 EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
                         .documentSplitter(splitter)
                         .embeddingModel(embeddingModel)

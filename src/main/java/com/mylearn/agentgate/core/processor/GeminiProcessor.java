@@ -11,6 +11,7 @@ import com.mylearn.agentgate.core.domain.worldBook.WorldBookManager;
 import com.mylearn.agentgate.core.entity.*;
 import com.mylearn.agentgate.core.listener.HistoryMqMessage;
 import com.mylearn.agentgate.exception.AgentException;
+import com.mylearn.agentgate.service.ModelApiService;
 import com.mylearn.agentgate.utils.HistoryIdUtils;
 import com.mylearn.agentgate.utils.UserIdUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,9 @@ public class GeminiProcessor extends AbstractChatProcessor {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private ModelApiService modelApiService;
+
     // todo 扛不住一点并发啊
     private static final ThreadPoolExecutor renderThreadPool = new ThreadPoolExecutor(
             16,
@@ -82,6 +86,15 @@ public class GeminiProcessor extends AbstractChatProcessor {
             Executors.defaultThreadFactory(),
             new ThreadPoolExecutor.AbortPolicy()
     );
+
+
+    public static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:";
+    public static final String NON_STREAM_PREFIX = "generateContent?key=";
+    public static final List<String> GEMINI_VERSION_LIST = new ArrayList<>();
+
+    static {
+        GEMINI_VERSION_LIST.add("gemini-1.5-flash");
+    }
 
 
 
@@ -126,7 +139,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
     @Override
     LResponse transferAi(LRequest lRequest, List<HistoryMessage> history, Prompt prompt, RoleCard roleCard, List<String> worldBookMessages) {
         // todo 负载均衡设计 可能采用配置方式解决
-        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
+//        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMwBIWE63VgdEmhu1FcDR4bCMUa2w7u0E";
+        String apiUrl = GEMINI_URL + NON_STREAM_PREFIX + modelApiService.getChatApi("gemini", GEMINI_VERSION_LIST.getFirst());
 
         HttpEntity<Map<String, Object>> entity = null;
 
