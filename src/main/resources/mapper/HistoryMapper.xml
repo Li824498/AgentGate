@@ -6,13 +6,15 @@
     <select id="selectByUserIdAndChatId" resultType="com.mylearn.agentgate.core.entity.HistoryMessage">
         select id, user_id, chat_id, msg_index, role, context, create_time, update_time
         from tb_history
-        where user_id = #{userId} and chat_id = #{chatId}
+        <where>
+            user_id = #{userId} and chat_id = #{chatId}
+        </where>
         order by msg_index asc;
     </select>
 
 
     <insert id="insertHistory" parameterType="com.mylearn.agentgate.core.entity.HistoryMessage" useGeneratedKeys="true" keyProperty="id">
-        insert into tb_history (user_id, chat_id, msg_index, role, context)
-        values (#{userId}, #{chatId}, #{msgIndex}, #{role}, #{context});
+        insert into tb_history (user_id, chat_id, msg_index, role, context, create_time)
+        values (#{userId}, #{chatId}, #{msgIndex}, #{role}, #{context}, #{createTime});
     </insert>
 </mapper>

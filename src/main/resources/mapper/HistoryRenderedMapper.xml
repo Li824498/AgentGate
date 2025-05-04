@@ -7,9 +7,9 @@
     <insert id="batchInsert"
             parameterType="java.util.List">
         insert into tb_history_rendered
-        (msg_index, render_type, out_context, history_id)
+        (user_id, msg_index, render_type, out_context, history_id, create_time)
         values <foreach collection="historyRenderedList" open="" close="" separator="," item="item">
-            (#{item.msgIndex}, #{item.renderType}, #{item.outContext}, #{item.historyId})
+            (#{item.userId}, #{item.msgIndex}, #{item.renderType}, #{item.outContext}, #{item.historyId}, #{item.createTime})
         </foreach>
     </insert>
 
@@ -17,16 +17,20 @@
             parameterType="java.lang.String">
         select id, msg_index, render_type, out_context, history_id, create_time, update_time
         from tb_history_rendered
-        where history_id = #{historyId}
+        <where>
+            history_id = #{historyId}
+        </where>
     </select>
 
     <select id="batchGetByHistoryIds" resultType="com.mylearn.agentgate.core.entity.HistoryRendered"
             parameterType="java.util.List">
         select id, msg_index, render_type, out_context, history_id, create_time, update_time
         from tb_history_rendered
-        where history_id in
-              <foreach collection="list" item="item" open="(" close=")" separator=",">
-                  #{item}
-              </foreach>
+        <where>
+            history_id in
+            <foreach collection="list" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </where>
     </select>
 </mapper>

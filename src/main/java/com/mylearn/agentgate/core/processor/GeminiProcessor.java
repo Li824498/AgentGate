@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -283,6 +284,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
                 historyRendered.setOutContext(getGeminiText(response));
                 // todo 使用线程池
                 historyRendered.setHistoryId(HistoryIdUtils.get());
+                historyRendered.setCreateTime(LocalDateTime.now());
+                historyRendered.setUserId(UserIdUtils.getUserId());
                 return historyRendered;
             }
         }).collect(Collectors.toList());

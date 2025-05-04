@@ -1,0 +1,80 @@
+# sharding.yml
+dataSources:
+  ds1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://192.168.88.129:3306/AgentGate_sharding_1
+    username: root
+    password: 123
+  ds0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://192.168.88.130:3306/AgentGate_sharding_0
+    username: root
+    password: 123
+
+rules:
+#  - 将固定不常用的配置类表分散到库中做单表
+  - !SINGLE
+    tables:
+      - ds0.tb_render
+      - ds0.tb_suite_render
+      - ds0.tb_worldBook
+      - ds1.tb_model_api
+      - ds1.tb_prompt
+      - ds1.tb_role_card
+      - ds1.tb_chat_meta
+  - !SHARDING
+    tables:
+#      tb_history,userid
+      tb_history:
+        actualDataNodes: ds${0..1}.tb_history_${202504..202505}
+        databaseStrategy:
+          standard:
+            shardingColumn: user_id
+            shardingAlgorithmName: user_id_spi
+        tableStrategy:
+          standard:
+            shardingColumn: create_time
+            shardingAlgorithmName: data_interval
+
+      #      tb_history_rendered,userid
+      tb_history_rendered:
+        actualDataNodes: ds${0..1}.tb_history_rendered_${202504..202505}
+        databaseStrategy:
+          standard:
+            shardingColumn: user_id
+            shardingAlgorithmName: user_id_spi
+        tableStrategy:
+          standard:
+            shardingColumn: create_time
+            shardingAlgorithmName: data_interval
+
+#      tb_chat_meta:
+#        actualDataNodes: ds${0..1}.tb_chat_meta
+#        databaseStrategy:
+#          standard:
+#            shardingColumn: user_id
+#            shardingAlgorithmName: user_id_spi
+
+
+    shardingAlgorithms:
+      data_interval:
+        type: INTERVAL
+        props:
+          datetime-pattern: "yyyy-MM-dd HH:mm:ss"
+          datetime-lower: '2025-04-01 00:00:00'
+          sharding-suffix-pattern: "yyyyMM"
+          datetime-interval-amount: 1
+          datetime-interval-unit: "MONTHS"
+      user_id_spi:
+        type: USERID_SPI
+#    bindingTables:
+#      - tb_history,tb_history_rendered #避免跨库查询
+
+  - !BROADCAST
+    tables:
+      - tb_user
+
+props:
+  sql-show: true

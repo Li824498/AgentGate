@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: AgentGate
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:sharding.yml
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.88.130:3306/AgentGate?useSSL=false&serverTimezone=UTC
+#    username: root
+#    password: 123
+  data:
+    redis:
+      host: 192.168.88.130
+      port: 6379
+      password: 123321
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 1
+          time-between-eviction-runs: 10s
+      database: 3
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=600s
+  rabbitmq:
+    host: 192.168.88.130 # 你的虚拟机IP
+    port: 5672 # 端口
+    virtual-host: /agentGate # 虚拟主机
+    username: agent # 用户名
+    password: bubugao1234 # 密码
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          multiplier: 1
+          max-attempts: 3
+          stateless: true
+#  mvc:
+#    pathmatch:
+#      matching-strategy: ant_path_matcher
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    root: debug
+#    org.mybatis.ibatis: DEBUG

@@ -8,6 +8,7 @@ import com.mylearn.agentgate.utils.HistoryIdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -37,6 +38,7 @@ public class GeminiHistoryManager implements HistoryManager {
         historyMessage.setMsgIndex(historyMessages.size() + 1);
         historyMessage.setRole("user");
         historyMessage.setContext(lRequest.getContext());
+        historyMessage.setCreateTime(LocalDateTime.now());
 
         historyMapper.insertHistory(historyMessage);
 
@@ -51,6 +53,7 @@ public class GeminiHistoryManager implements HistoryManager {
         historyMessage.setMsgIndex(lResponse.getMsgIndex());
         historyMessage.setRole("model");
         historyMessage.setContext(lResponse.getInContext());
+        historyMessage.setCreateTime(LocalDateTime.now());
 
         historyMapper.insertHistory(historyMessage);
         HistoryIdUtils.set(historyMessage.getId());
