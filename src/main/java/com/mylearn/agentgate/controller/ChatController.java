@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,9 @@ public class ChatController {
 
     @GetMapping("/{id}")
     public ResultDTO<List<HistoryDTO>> getHistoriesByChatId(@PathVariable("id") String chatId) {
-        List<HistoryMessage> historyMessageList = historyService.getHistoriesByChatId(chatId);
+        // todo 先写死，以后再改，啊啊啊啊啊
+        LocalDateTime dateTime = LocalDateTime.of(2025, 5, 4, 18, 30, 33);
+        List<HistoryMessage> historyMessageList = historyService.getHistoriesByChatId(chatId, dateTime);
 
         System.out.println("yes");
         for (HistoryMessage historyMessage : historyMessageList) {

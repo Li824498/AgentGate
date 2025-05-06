@@ -28,7 +28,8 @@ public class GeminiHistoryManager implements HistoryManager {
         String userId = lRequest.getUserId();
         String chatId = lRequest.getChatId();
 
-        List<HistoryMessage> historyMessages = historyMapper.selectByUserIdAndChatId(userId, chatId);
+        LocalDateTime dateTime = LocalDateTime.of(2025, 5, 4, 18, 30, 33);
+        List<HistoryMessage> historyMessages = historyMapper.selectByUserIdAndChatId(userId, chatId, dateTime);
 
         HistoryMessage historyMessage = new HistoryMessage();
         historyMessage.setUserId(lRequest.getUserId());
