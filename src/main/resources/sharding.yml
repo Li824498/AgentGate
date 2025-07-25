@@ -69,8 +69,8 @@ rules:
           datetime-interval-unit: "MONTHS"
       user_id_spi:
         type: USERID_SPI
-#    bindingTables:
-#      - tb_history,tb_history_rendered #避免跨库查询
+    bindingTables:
+      - tb_history,tb_history_rendered #避免跨库查询
 
   - !BROADCAST
     tables:

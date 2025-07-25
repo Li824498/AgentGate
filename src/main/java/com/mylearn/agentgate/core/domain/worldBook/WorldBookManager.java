@@ -17,6 +17,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -39,6 +40,9 @@ public class WorldBookManager {
 /*        List<WorldBook> worldBooks = worldBookMapper.selectByIds(lRequest.getWorldBookIds());
         Set<InMemoryEmbeddingStore<TextSegment>> inMemoryEmbeddingStores = worldBooks.stream().map(worldBook -> InMemoryEmbeddingStore.fromFile(worldBook.getUrl())).collect(Collectors.toSet());
         InMemoryEmbeddingStore<TextSegment> embeddingStore = InMemoryEmbeddingStore.merge(inMemoryEmbeddingStores);*/
+
+        // 不使用世界书就不走了
+        if(lRequest.getWorldBookIds().isEmpty()) return Collections.emptyList();
 
         InMemoryEmbeddingStore<TextSegment> embeddingStore = getFromCaffeineCache(lRequest.getWorldBookIds());
 
