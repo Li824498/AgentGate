@@ -5,7 +5,7 @@ spring:
 #    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
 #    url: jdbc:shardingsphere:classpath:sharding.yml
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.88.130:3306/AgentGate?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://192.168.88.130:3306/SlaveGate?useSSL=false&serverTimezone=UTC
     username: root
     password: 123
   data:

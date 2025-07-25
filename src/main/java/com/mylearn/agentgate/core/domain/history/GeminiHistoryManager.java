@@ -5,6 +5,8 @@ import com.mylearn.agentgate.mapper.ChatMetaMapper;
 import com.mylearn.agentgate.mapper.HistoryMapper;
 import com.mylearn.agentgate.mapper.RoleCardMapper;
 import com.mylearn.agentgate.utils.HistoryIdUtils;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@Slf4j
 public class GeminiHistoryManager implements HistoryManager {
     @Autowired
     private HistoryMapper historyMapper;
@@ -93,5 +96,30 @@ public class GeminiHistoryManager implements HistoryManager {
         chatMeta.setMsgNum(lResponse.getMsgIndex());
 
         chatMetaMapper.upsert(chatMeta);
+    }
+
+    public int imHistoryCompensate() {
+        int count = historyMapper.count();
+        historyMapper.deleteByid(count);
+        return count;
+    }
+
+    public void imHistoryInsert(int count, List<String> messages, String role) {
+        for (String message : messages) {
+            HistoryMessage historyMessage = new HistoryMessage();
+            historyMessage.setId(count);
+            historyMessage.setUserId("Takesth");
+            historyMessage.setChatId("hikariChat");
+            historyMessage.setMsgIndex(count);
+            historyMessage.setRole(role);
+            historyMessage.setContext(message);
+            historyMessage.setCreateTime(LocalDateTime.now());
+            historyMessage.setUpdateTime(LocalDateTime.now());
+            historyMapper.insertHistory(historyMessage);
+
+            log.info("已存入消息：" + historyMessage.toString());
+
+            count++;
+        }
     }
 }

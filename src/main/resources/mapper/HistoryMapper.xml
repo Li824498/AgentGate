@@ -3,6 +3,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.mylearn.agentgate.mapper.HistoryMapper">
+    <delete id="deleteByid" parameterType="int">
+        delete from tb_history where id = #{count}
+    </delete>
+
     <select id="selectByUserIdAndChatId" resultType="com.mylearn.agentgate.core.entity.HistoryMessage">
         select id, user_id, chat_id, msg_index, role, context, create_time, update_time
         from tb_history
@@ -10,6 +14,11 @@
             user_id = #{userId} and chat_id = #{chatId}
         </where>
         order by msg_index asc;
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        select count(*)
+        from tb_history
     </select>
 
 

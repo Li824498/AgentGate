@@ -486,7 +486,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         String textPlusUser = "继续";
         List<Map<String, String>> partsPlusUser = List.of(Map.of("text", textPlusUser));
         Map<String, Object> mapPlusUser = new LinkedHashMap<>();
-        mapPlusUser.put("role", "model");
+        mapPlusUser.put("role", "user");
         mapPlusUser.put("parts", partsPlusUser);
 
         contents.add(mapPlusUser);

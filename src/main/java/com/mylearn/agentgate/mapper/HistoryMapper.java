@@ -12,4 +12,8 @@ public interface HistoryMapper {
     List<HistoryMessage> selectByUserIdAndChatId(String userId, String chatId, LocalDateTime dateTime);
 
     void insertHistory(HistoryMessage historyMessage);
+
+    int count();
+
+    void deleteByid(int count);
 }
