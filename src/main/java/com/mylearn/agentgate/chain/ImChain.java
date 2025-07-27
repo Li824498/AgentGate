@@ -5,6 +5,7 @@ import com.mylearn.agentgate.core.ImCore;
 import com.mylearn.agentgate.core.entity.ImMessage;
 import com.mylearn.agentgate.core.entity.LRequest;
 import com.mylearn.agentgate.core.entity.LResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+@Slf4j
 public class ImChain {
     @Autowired
     private Core core;
@@ -20,7 +22,7 @@ public class ImChain {
     private ImCore imCore;
 
 
-    public List<String> syncImChatChain(List<ImMessage> imMessages) {
+    public List<String> syncImChatChain(List<String> imMessages) {
         LRequest lRequest = imCore.im2lRParser(imMessages);
 
         LResponse lResponse = core.syncNonStreamChatProcess(lRequest);

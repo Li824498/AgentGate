@@ -29,7 +29,7 @@ public class ImCore {
      * @param imMessages
      * @return
      */
-    public LRequest im2lRParser(List<ImMessage> imMessages) {
+    public LRequest im2lRParser(List<String> imMessages) {
         return imProcessor.im2lRParser(imMessages);
     }
 

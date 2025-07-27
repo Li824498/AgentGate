@@ -20,7 +20,7 @@ public class IMController {
     public ImChain imChain;
 
     @PostMapping("/chat")
-    public ResultDTO imChatController(@RequestBody List<ImMessage> imMessages) {
+    public ResultDTO imChatController(@RequestBody List<String> imMessages) {
         List<String> results = imChain.syncImChatChain(imMessages);
         return ResultDTO.success(results);
     }

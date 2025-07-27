@@ -9,6 +9,7 @@ import com.mylearn.agentgate.core.entity.LResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,12 +41,12 @@ public class ImProcessor {
      * @param imMessages
      * @return
      */
-    public LRequest im2lRParser(List<ImMessage> imMessages) {
+    public LRequest im2lRParser(List<String> imMessages) {
         LRequest lRequest = new LRequest();
         //todo 肯定不能用geminiProcessor，架构太烂了，要改，但是先暂时用着
         StringBuilder stringBuilder = new StringBuilder();
-        for (ImMessage imMessage : imMessages) {
-            stringBuilder.append(imMessage.time + "  " + imMessage.text);
+        for (String imMessage : imMessages) {
+            stringBuilder.append(LocalDateTime.now() + "  " + imMessage);
         }
         String input = stringBuilder.toString();
 
