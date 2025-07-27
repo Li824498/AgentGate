@@ -100,7 +100,7 @@ public class GeminiHistoryManager implements HistoryManager {
 
     public int imHistoryCompensate() {
         int count = historyMapper.count();
-        historyMapper.deleteByid(count);
+        historyMapper.deleteByids(List.of(count, count - 1));
         return count;
     }
 

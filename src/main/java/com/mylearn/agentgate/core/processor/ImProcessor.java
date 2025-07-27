@@ -75,7 +75,7 @@ public class ImProcessor {
         return lRequest;
     }
 
-    public void historyCompensate(List<String> messages, String role) {
+/*    public void historyCompensate(List<String> messages, String role) {
         log.info("stage 3-compensate-user: process start!");
         //删除最后一条
         int count = historyManager.imHistoryCompensate();
@@ -85,6 +85,20 @@ public class ImProcessor {
         historyManager.imHistoryInsert(count, messages, role);
         log.info("stage 3-compensate-user: " + "插入了正确的最后几条数据,目前应该只是一条:" + role + ":" + messages.toString());
 
+        log.info("stage 3-compensate-user: process completed!");
+    }*/
+
+    public void historyCompensate(List<String> userHistories, List<String> modelHistories) {
+        log.info("stage 3-compensate-user: process start!");
+
+        //删除最后两条
+        int count = historyManager.imHistoryCompensate();
+        log.info("stage 3-compensate-user: " + "目前总共有" + count + "历史记录," + "删除了id=" + count + "和" + (count - 1) + "的数据");
+
+        log.info("stage 3-compensate-user: " + "补偿user阶段: " + "msgIndex=" + (count - userHistories.size()) + "内容:" + userHistories.toString());
+        historyManager.imHistoryInsert(count - userHistories.size(), userHistories, "user");
+        log.info("stage 3-compensate-user: " + "补偿model阶段: " + "msgIndex=" + count + "内容:" + modelHistories.toString());
+        historyManager.imHistoryInsert(count, modelHistories, "model");
         log.info("stage 3-compensate-user: process completed!");
     }
 }

@@ -16,4 +16,6 @@ public interface HistoryMapper {
     int count();
 
     void deleteByid(int count);
+
+    void deleteByids(List<Integer> count);
 }

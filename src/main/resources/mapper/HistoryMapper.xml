@@ -7,6 +7,11 @@
         delete from tb_history where id = #{count}
     </delete>
 
+    <delete id="deleteByids" parameterType="java.util.List">
+        delete from tb_history
+        where id in #{count}
+    </delete>
+
     <select id="selectByUserIdAndChatId" resultType="com.mylearn.agentgate.core.entity.HistoryMessage">
         select id, user_id, chat_id, msg_index, role, context, create_time, update_time
         from tb_history

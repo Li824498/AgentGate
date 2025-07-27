@@ -29,11 +29,13 @@ public class ImChain {
         LResponse lResponse = core.syncNonStreamChatProcess(lRequest);
         log.info("stage 2-chat: process completed!");
 
-        imCore.historyCompensate(List.of(lRequest.getContext()), "user");
+//        imCore.historyCompensate(List.of(lRequest.getContext()), "user");
 
         List<String> messages = imCore.lR2imParser(lResponse, true);
 
-        imCore.historyCompensate(messages, "model");
+//        imCore.historyCompensate(messages, "model");
+
+        imCore.historyCompensate(List.of(lRequest.getContext()), messages);
 
         return messages;
     }

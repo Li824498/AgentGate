@@ -33,7 +33,16 @@ public class ImCore {
         return imProcessor.im2lRParser(imMessages);
     }
 
-    public void historyCompensate(List<String> messages, String role) {
+/*    public void historyCompensate(List<String> messages, String role) {
         imProcessor.historyCompensate(messages, role);
+    }*/
+
+    /**
+     * 补偿方法，将json原记录转换为标准格式存储
+     * @param userHistories user消息
+     * @param modelHistories model消息
+     */
+    public void historyCompensate(List<String> userHistories, List<String> modelHistories) {
+        imProcessor.historyCompensate(userHistories, modelHistories);
     }
 }
