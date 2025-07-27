@@ -23,7 +23,9 @@ public class ImChain {
 
 
     public List<String> syncImChatChain(List<String> imMessages) {
-        LRequest lRequest = imCore.im2lRParser(imMessages);
+        int count = imCore.count();
+
+        LRequest lRequest = imCore.im2lRParser(imMessages, count);
 
         log.info("stage 2-chat: process start!");
         LResponse lResponse = core.syncNonStreamChatProcess(lRequest);
@@ -35,7 +37,9 @@ public class ImChain {
 
 //        imCore.historyCompensate(messages, "model");
 
-        imCore.historyCompensate(List.of(lRequest.getContext()), messages);
+        // todo 先把补偿给关了，要不然笨笨的，哈哈哈
+//        imCore.historyCompensate(List.of(lRequest.getContext()), messages);
+//        imCore.historyCompensateOnlyMsgIndexAndId();
 
         return messages;
     }

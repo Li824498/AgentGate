@@ -18,7 +18,7 @@ export class StreamReader {
       signal,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
+        'Accept': 'prompt/event-stream',
         ...this.options.headers
       }
     })

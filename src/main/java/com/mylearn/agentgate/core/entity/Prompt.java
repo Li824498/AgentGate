@@ -9,7 +9,7 @@ public class Prompt {
     public int id;
     public String name;
     public String userId;
-    public String text;
+    public String prompt;
     public LocalDateTime createTime;
     public LocalDateTime updateTime;
 }

@@ -137,7 +137,7 @@ const handleWorldBookChange = (row) => {
 
 // 上传相关方法
 const beforeUpload = (file) => {
-  const allowedTypes = ['application/json', 'text/plain', 'application/pdf']
+  const allowedTypes = ['application/json', 'prompt/plain', 'application/pdf']
   const isAllowedType = allowedTypes.includes(file.type)
   const isLt10M = file.size / 1024 / 1024 < 10
 

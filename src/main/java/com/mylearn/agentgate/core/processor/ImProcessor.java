@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,21 +23,27 @@ public class ImProcessor {
     private GeminiHistoryManager historyManager;
 
     public List<String> lR2imParser(LResponse lResponse, boolean generateTime) {
-        log.info("stage 4-convert: process start!");
+        log.info("stage 3-convert: process start!");
         String json = lResponse.getInContext();
-        log.info("stage 4-convert: 要转换的信息: " + json);
+        log.info("stage 3-convert: 要转换的信息: " + json);
+
+        // todo 独立成方法，后期肯定要扩展
+        int startIndex = json.indexOf('[');
+        int endIndex = json.lastIndexOf(']');
+        String halfCookedJson = json.substring(startIndex, endIndex + 1);
+        log.info("stage 3-convert: 要转换的信息硬编码处理: " + halfCookedJson);
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> messages = new ArrayList<>();
         try {
-            messages = objectMapper.readValue(json, List.class);
-            log.info("stage 4-convert: 转换结果: " + messages.toString());
+            messages = objectMapper.readValue(halfCookedJson, List.class);
+            log.info("stage 3-convert: 转换结果: " + messages.toString());
         } catch (JsonProcessingException e) {
             // todo 鲁棒性太差看看怎么解决
             throw new RuntimeException(e);
         }
 
-        log.info("stage 4-convert: process completed!");
+        log.info("stage 3-convert: process completed!");
         return messages;
     }
 
@@ -47,13 +54,15 @@ public class ImProcessor {
      * @param imMessages
      * @return
      */
-    public LRequest im2lRParser(List<String> imMessages) {
+    public LRequest im2lRParser(List<String> imMessages, int count) {
         log.info("stage 1-convert: start process");
         LRequest lRequest = new LRequest();
         //todo 肯定不能用geminiProcessor，架构太烂了，要改，但是先暂时用着
         StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("user在如下时间发送了如下消息: ");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         for (String imMessage : imMessages) {
-            stringBuilder.append(LocalDateTime.now() + "  " + imMessage);
+            stringBuilder.append(LocalDateTime.now().format(dateTimeFormatter)).append("  ").append(imMessage);
         }
         String input = stringBuilder.toString();
 
@@ -62,7 +71,7 @@ public class ImProcessor {
         lRequest.setChatId("hikariChat");
         lRequest.setPromptId(0);
         lRequest.setRoleCardId(0);
-        lRequest.setMsgIndex(0);
+        lRequest.setMsgIndex(count + 1);
         lRequest.setWorldBookIds(Collections.emptyList());
         lRequest.setRenders(Collections.emptyList());
         lRequest.setModelName("gemini");
@@ -89,16 +98,20 @@ public class ImProcessor {
     }*/
 
     public void historyCompensate(List<String> userHistories, List<String> modelHistories) {
-        log.info("stage 3-compensate-user: process start!");
+        log.info("stage 4-compensate-user: process start!");
 
         //删除最后两条
         int count = historyManager.imHistoryCompensate();
-        log.info("stage 3-compensate-user: " + "目前总共有" + count + "历史记录," + "删除了id=" + count + "和" + (count - 1) + "的数据");
+        log.info("stage 4-compensate-user: " + "目前总共有" + count + "历史记录," + "删除了msgIndex=" + count + "和" + (count - 1) + "的数据");
 
-        log.info("stage 3-compensate-user: " + "补偿user阶段: " + "msgIndex=" + (count - userHistories.size()) + "内容:" + userHistories.toString());
+        log.info("stage 4-compensate-user: " + "补偿user阶段: " + "msgIndex=" + (count - userHistories.size()) + "内容:" + userHistories.toString());
         historyManager.imHistoryInsert(count - userHistories.size(), userHistories, "user");
-        log.info("stage 3-compensate-user: " + "补偿model阶段: " + "msgIndex=" + count + "内容:" + modelHistories.toString());
+        log.info("stage 4-compensate-user: " + "补偿model阶段: " + "msgIndex=" + count + "内容:" + modelHistories.toString());
         historyManager.imHistoryInsert(count, modelHistories, "model");
-        log.info("stage 3-compensate-user: process completed!");
+        log.info("stage 4-compensate-user: process completed!");
+    }
+
+    public int count() {
+        return historyManager.count();
     }
 }

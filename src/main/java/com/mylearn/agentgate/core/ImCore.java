@@ -29,8 +29,8 @@ public class ImCore {
      * @param imMessages
      * @return
      */
-    public LRequest im2lRParser(List<String> imMessages) {
-        return imProcessor.im2lRParser(imMessages);
+    public LRequest im2lRParser(List<String> imMessages, int count) {
+        return imProcessor.im2lRParser(imMessages, count);
     }
 
 /*    public void historyCompensate(List<String> messages, String role) {
@@ -44,5 +44,9 @@ public class ImCore {
      */
     public void historyCompensate(List<String> userHistories, List<String> modelHistories) {
         imProcessor.historyCompensate(userHistories, modelHistories);
+    }
+
+    public int count() {
+        return imProcessor.count();
     }
 }

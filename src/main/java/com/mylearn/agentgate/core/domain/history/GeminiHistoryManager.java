@@ -100,7 +100,7 @@ public class GeminiHistoryManager implements HistoryManager {
 
     public int imHistoryCompensate() {
         int count = historyMapper.count();
-        historyMapper.deleteByids(List.of(count, count - 1));
+        historyMapper.deleteByMsgIndexes(List.of(count, count - 1));
         return count;
     }
 
@@ -112,14 +112,22 @@ public class GeminiHistoryManager implements HistoryManager {
             historyMessage.setChatId("hikariChat");
             historyMessage.setMsgIndex(count);
             historyMessage.setRole(role);
+            // 根据不同类型处理,过滤掉前缀
             historyMessage.setContext(message);
+            if (role.equals("user")) {
+                historyMessage.setContext(message.substring(39));
+            }
             historyMessage.setCreateTime(LocalDateTime.now());
             historyMessage.setUpdateTime(LocalDateTime.now());
-            historyMapper.insertHistory(historyMessage);
+            historyMapper.insertHistoryWithId(historyMessage);
 
             log.info("已存入消息：" + historyMessage.toString());
 
             count++;
         }
+    }
+
+    public int count() {
+        return historyMapper.count();
     }
 }

@@ -89,7 +89,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
     );
 
 
-    public static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:";
+//    public static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:";
+    public static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:";
     public static final String NON_STREAM_PREFIX = "generateContent?key=";
     public static final List<String> GEMINI_VERSION_LIST = new ArrayList<>();
 
@@ -149,6 +150,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
         ResponseEntity<Map> response = null;
         try {
+            log.info("entity: " + entity.toString());
             response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
             if (response.getStatusCode().isError()) {
                 throw new AgentException("模型调用失败，状态码：" + response.getStatusCode());
@@ -210,7 +212,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
                                         }
 
 
-                                        if (line.startsWith("            \"text\": ")) {
+                                        if (line.startsWith("            \"prompt\": ")) {
                                             String substring = line.substring(21, line.length() - 1);
 
                                             redisTemplate.opsForValue().append(bucketName, substring);
@@ -305,11 +307,11 @@ public class GeminiProcessor extends AbstractChatProcessor {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                String text = getGeminiText(response);
+                String prompt = getGeminiText(response);
                 HistoryRendered historyRendered = new HistoryRendered();
                 historyRendered.setMsgIndex(lRequest.getMsgIndex());
                 historyRendered.setRenderType();
-                return text;
+                return prompt;
             }
         }).collect()*/
 
@@ -327,7 +329,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
 
         ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);*/
 
-//        String text = getGeminiText(response);
+//        String prompt = getGeminiText(response);
     }
 
     @Override
@@ -359,8 +361,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
         // 1.user:prompt
         List<Map> contents = new ArrayList<>();
 
-//        List<Map<String, String>> partsPrompt = List.of(Map.of("text", prompt == null ? "" : prompt.getText()));
-        List<Map<String, String>> partsPrompt = List.of(Map.of("text", Optional.ofNullable(prompt).map(Prompt::getText).orElse("")));
+//        List<Map<String, String>> partsPrompt = List.of(Map.of("prompt", prompt == null ? "" : prompt.getPrompt()));
+        List<Map<String, String>> partsPrompt = List.of(Map.of("text", Optional.ofNullable(prompt).map(Prompt::getPrompt).orElse("")));
         Map<String, Object> mapPrompt = new LinkedHashMap<>();
         mapPrompt.put("role", "user");
         mapPrompt.put("parts", partsPrompt);
@@ -376,7 +378,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapStartText);
         //3.user-model:history
         for (HistoryMessage historyMessage : history) {
-//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getInContext()));
+//            List<Map<String, String>> partsHistory = List.of(Map.of("prompt", historyMessage == null ? "" : historyMessage.getInContext()));
             List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage.getContext()));
 
             Map<String, Object> mapHistory = new LinkedHashMap<>();
@@ -432,8 +434,8 @@ public class GeminiProcessor extends AbstractChatProcessor {
         // 1.user:prompt
         List<Map> contents = new ArrayList<>();
 
-//        List<Map<String, String>> partsPrompt = List.of(Map.of("text", prompt == null ? "" : prompt.getText()));
-        List<Map<String, String>> partsPrompt = List.of(Map.of("text", Optional.ofNullable(prompt).map(Prompt::getText).orElse("")));
+//        List<Map<String, String>> partsPrompt = List.of(Map.of("prompt", prompt == null ? "" : prompt.getPrompt()));
+        List<Map<String, String>> partsPrompt = List.of(Map.of("text", Optional.ofNullable(prompt).map(Prompt::getPrompt).orElse("")));
         Map<String, Object> mapPrompt = new LinkedHashMap<>();
         mapPrompt.put("role", "user");
         mapPrompt.put("parts", partsPrompt);
@@ -449,7 +451,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapStartText);
         //3.user-model:history
         for (HistoryMessage historyMessage : history) {
-//            List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage == null ? "" : historyMessage.getInContext()));
+//            List<Map<String, String>> partsHistory = List.of(Map.of("prompt", historyMessage == null ? "" : historyMessage.getInContext()));
             List<Map<String, String>> partsHistory = List.of(Map.of("text", historyMessage.getContext()));
 
             Map<String, Object> mapHistory = new LinkedHashMap<>();
@@ -463,7 +465,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         //4.1键入消息
         textLastText.append(lRequest.getContext());
         //4.2角色卡设定
-        textLastText.append(Optional.ofNullable(roleCard).map(RoleCard::getSettingText).orElse(""));
+        textLastText.append("\n").append("(角色卡设定信息：").append(Optional.ofNullable(roleCard).map(RoleCard::getSettingText).orElse("")).append(")");
         //4.3worldBook
         textLastText.append(worldBookMessages);
 
@@ -475,7 +477,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         contents.add(mapLastText);
         //5稳定输出
         //5.1model
-        String textPlusModel = "推荐以下面的指令&剧情继续：\n" + lRequest.getContext();
+/*        String textPlusModel = "推荐以下面的指令&剧情继续：\n" + lRequest.getContext();
         List<Map<String, String>> partsPlusModel = List.of(Map.of("text", textPlusModel));
         Map<String, Object> mapPlusModel = new LinkedHashMap<>();
         mapPlusModel.put("role", "model");
@@ -489,7 +491,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
         mapPlusUser.put("role", "user");
         mapPlusUser.put("parts", partsPlusUser);
 
-        contents.add(mapPlusUser);
+        contents.add(mapPlusUser);*/
 
 
         Map<String, Object> body = Map.of("contents", contents);
@@ -505,7 +507,7 @@ public class GeminiProcessor extends AbstractChatProcessor {
     private HttpEntity<Map<String, Object>> sendGeminiTextWithHistoryAndPrompt(LRequest lRequest, List<HistoryMessage> history, Prompt prompt) {
         List<Map> contents = new ArrayList<>();
 
-        List<Map<String, String>> parts1 = List.of(Map.of("text", prompt.getText()));
+        List<Map<String, String>> parts1 = List.of(Map.of("text", prompt.getPrompt()));
         Map<String, Object> map1 = new HashMap<>();
         map1.put("role", "user");
         map1.put("parts", parts1);

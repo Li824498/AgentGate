@@ -9,7 +9,17 @@
 
     <delete id="deleteByids" parameterType="java.util.List">
         delete from tb_history
-        where id in #{count}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+    <delete id="deleteByMsgIndexes" parameterType="java.util.List">
+        delete from tb_history
+        where msg_index in
+        <foreach collection="msgIndexes" separator="," open="(" close=")" item="msgIndex">
+            #{msgIndex}
+        </foreach>
     </delete>
 
     <select id="selectByUserIdAndChatId" resultType="com.mylearn.agentgate.core.entity.HistoryMessage">
@@ -30,5 +40,9 @@
     <insert id="insertHistory" parameterType="com.mylearn.agentgate.core.entity.HistoryMessage" useGeneratedKeys="true" keyProperty="id">
         insert into tb_history (user_id, chat_id, msg_index, role, context, create_time)
         values (#{userId}, #{chatId}, #{msgIndex}, #{role}, #{context}, #{createTime});
+    </insert>
+    <insert id="insertHistoryWithId" parameterType="com.mylearn.agentgate.core.entity.HistoryMessage">
+        insert into tb_history (id, user_id, chat_id, msg_index, role, context, create_time, update_time)
+        values (#{id}, #{userId}, #{chatId}, #{msgIndex}, #{role}, #{context}, #{createTime}, #{updateTime});
     </insert>
 </mapper>

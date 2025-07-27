@@ -10,7 +10,7 @@ import java.util.Random;
 @Service
 public class ModelApiService {
 
-    public static final String EMB_MODEL_NAME = "text-embedding-3-small";
+    public static final String EMB_MODEL_NAME = "prompt-embedding-3-small";
     @Autowired
     private ModelApiMapper modelApiMapper;
 
