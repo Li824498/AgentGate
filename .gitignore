@@ -33,3 +33,8 @@ build/
 .vscode/
 
 src/main/resources/application.yaml
+
+
+# 生数据
+/Users/hanyufei451/code/agentgate/AgentGate/src/main/resources/DBDAO/user_testuser
+/Users/hanyufei451/code/agentgate/AgentGate/src/main/resources/apiResource
